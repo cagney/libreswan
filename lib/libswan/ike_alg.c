@@ -262,6 +262,40 @@ const struct ike_alg *ike_alg_by_sadb_alg_id(const struct ike_alg_type *algorith
 	return lookup_by_id(algorithms, SADB_ALG_ID, id, &b, DBG_CRYPT);
 }
 
+size_t jam_ike_alg_id_name(struct jambuf *log,
+			   const struct ike_alg_type *type,
+			   enum ike_alg_key key, int id)
+{
+	/* passert(type != NULL); */
+	passert(key < IKE_ALG_KEY_ROOF);
+
+	/*
+	 * Try the IKE_ALG database.  Presumably this function is
+	 * being called because it wasn't there. But, well, you never
+	 * know.
+	 */
+	const struct ike_alg *alg = lookup_by_id(type, key, id, LEMPTY);
+	if (alg != NULL) {
+		return jam_string(log, alg->fqn);
+	}
+
+	/*
+	 * Try the enum table.
+	 */
+	const char *name = enum_name_short(type->enum_names[key], id);
+	if (name != NULL) {
+		return jam_string(log, name);
+	}
+
+	/*
+	 * dump it in decimal.
+	 */
+	return jam(log, "<<%s %s ID %d?>>",
+		   ike_alg_key_name(key),
+		   ike_alg_type_name(type),
+		   id);
+}
+
 static const struct ike_alg *ikev1_oakley_lookup(const struct ike_alg_type *algorithms,
 						 unsigned id, enum_buf *b)
 {
