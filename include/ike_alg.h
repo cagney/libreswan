@@ -149,6 +149,16 @@ const struct ike_alg *ike_alg_byname(const struct ike_alg_type *type,
 bool ike_alg_enum_matched(const struct ike_alg_type *type, shunk_t name);
 
 /*
+ * Reverse, look for ID within TYPE's enums.
+ *
+ * Use this as a fallback for when the more direct lookups fail; for
+ * instance when an ID that is unknown is encountered.
+ */
+size_t jam_ike_alg_id_name(struct jambuf *log,
+			   const struct ike_alg_type *type,
+			   enum ike_alg_key key, int id);
+
+/*
  * Common prefix for struct encrypt_desc and struct hash_desc (struct
  * prf_desc and struct integ_desc).
  *
