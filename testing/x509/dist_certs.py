@@ -442,7 +442,7 @@ def create_mainca_end_certs(mainca_end_certs):
     """ Create the core set of end certs from mainca
     """
     serial = 2
-    print("creating mainca's end certs")
+    print("creating main RSA CA's end certs")
     for name in mainca_end_certs:
         # put special cert handling here
         print(" - creating %s"% name)
@@ -853,6 +853,88 @@ def create_self_signed():
         cmd = 'openssl pkcs12 -export -out '+name+'-selfsigned.p12 -inkey '+name+'-selfsigned.key -in ' \
               +name+'-selfsigned.cert -certfile '+name+'-selfsigned.cert -passout=file:../nss-pw'
         run(cmd)
+
+def create_mainec_certs():
+    """ The OpenSSL module doesn't appear to have
+    support for curves so we do it with pexpect
+    """
+
+    print("creating main EC root cert")
+
+    #create CA
+    pexpect.run('openssl ecparam -out '+dirbase+'keys/mainec.key '
+                '-name secp384r1 -genkey -noout')
+    child = pexpect.spawn('openssl req -x509 -new '
+                          '-key '+dirbase+'keys/mainec.key '
+                          '-out '+dirbase+'cacerts/mainec.crt '
+                          '-days 3650 -set_serial 1')
+    # must match create_root_ca(<<mainca>>)
+    child.expect('Country Name')
+    child.sendline('CA')
+    child.expect('State')
+    child.sendline('Ontario')
+    child.expect('Locality')
+    child.sendline('Toronto')
+    child.expect('Organization')
+    child.sendline('Libreswan')
+    child.expect('Organizational')
+    child.sendline('Test Department')
+    child.expect('Common')
+    child.sendline('Libreswan test CA for mainca')
+    child.expect('Email')
+    child.sendline('testing@libreswan.org')
+    child.expect(pexpect.EOF)
+
+    print("creating main EC end certs")
+
+    serial = 2
+    for name in ['east', 'west', 'north', 'road']:
+        print("- creating %s-mainec"% name)
+        #create end certs; west is secp256r1
+        if name is 'west':
+            pexpect.run('openssl ecparam '
+                        '-out '+dirbase+'keys/'+name+'-mainec.key '
+                        '-name secp256r1 -genkey -noout')
+        else:
+            pexpect.run('openssl ecparam '
+                        '-out '+dirbase+'keys/'+name+'-mainec.key '
+                        '-name secp384r1 -genkey -noout')
+        child = pexpect.spawn('openssl req -extensions ec-addon '
+                              '-config openssl.cnf -x509 '
+                              '-new -key '+dirbase+'keys/'+name+'-mainec.key '
+                              '-out '+dirbase+'certs/'+name+'-mainec.crt '
+                              '-days 365 -set_serial ' +
+                              str(serial))
+        # must match create_mainca_end_certs()
+        child.expect('Country Name')
+        child.sendline('CA')
+        child.expect('State')
+        child.sendline('Ontario')
+        child.expect('Locality')
+        child.sendline('Toronto')
+        child.expect('Organization')
+        child.sendline('Libreswan')
+        child.expect('Organizational')
+        child.sendline('Test Department')
+        child.expect('Common')
+        child.sendline(name + '.testing.libreswan.org')
+        child.expect('Email')
+        child.sendline('user-'+name+'@testing.libreswan.org')
+        child.expect(pexpect.EOF)
+        serial += 1
+        #package p12
+        output, status = pexpect.run('openssl pkcs12 -export '
+                                    '-inkey '+dirbase+'keys/'+name+'-mainec.key '
+                                     '-in '+dirbase+'certs/'+name+'-mainec.crt '
+                                     '-name '+name+'-mainec '
+                                     '-certfile '+dirbase+'cacerts/mainec.crt '
+                                     '-caname "mainec" '
+                                     '-out '+dirbase+'pkcs12/mainec/'+name+'-mainec.p12 '
+                                     '-passin pass:foobar -passout pass:foobar',
+                                     withexitstatus=True)
+        print("status:", status)
+        print("output:", output)
+
 
 def run_dist_certs():
     """ Generate the pluto test harness x509
