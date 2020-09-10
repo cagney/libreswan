@@ -67,10 +67,8 @@ static void merge_algorithms(struct proposal_parser *parser,
 			     enum proposal_algorithm algorithm,
 			     const struct ike_alg **defaults)
 {
+	pexpect(next_algorithm(proposal, algorithm, NULL) == NULL);
 	if (defaults == NULL) {
-		return;
-	}
-	if (next_algorithm(proposal, algorithm, NULL) != NULL) {
 		return;
 	}
 	for (const struct ike_alg **alg = defaults; (*alg) != NULL; alg++) {
@@ -84,9 +82,14 @@ static bool merge_defaults(struct proposal_parser *parser,
 	passert(parser->policy->version < elemsof(parser->protocol->defaults));
 	const struct proposal_defaults *defaults =
 		parser->protocol->defaults[parser->policy->version];
-	merge_algorithms(parser, proposal, PROPOSAL_encrypt, defaults->encrypt);
-	merge_algorithms(parser, proposal, PROPOSAL_prf, defaults->prf);
-	if (next_algorithm(proposal, PROPOSAL_integ, NULL) == NULL) {
+	/* encrypt */
+	if (parser->protocol->encrypt &&
+	    next_algorithm(proposal, PROPOSAL_encrypt, NULL) == NULL) {
+		merge_algorithms(parser, proposal, PROPOSAL_encrypt, defaults->encrypt);
+	}
+	/* integ */
+	if (parser->protocol->integ &&
+	    next_algorithm(proposal, PROPOSAL_integ, NULL) == NULL) {
 		if (proposal_encrypt_aead(proposal)) {
 			/*
 			 * Since AEAD, integrity is always 'none'.
@@ -99,34 +102,61 @@ static bool merge_defaults(struct proposal_parser *parser,
 			 */
 			merge_algorithms(parser, proposal, PROPOSAL_integ,
 					 defaults->integ);
-		} else if (next_algorithm(proposal, PROPOSAL_prf, NULL) != NULL &&
-			   proposal_encrypt_norm(proposal)) {
+		} else if (defaults->prf != NULL) {
 			/*
-			 * Since non-AEAD, use integrity algorithms
-			 * that are implemented using the PRFs.
+			 * XXX: defaults->prf should have been set.
 			 */
-			FOR_EACH_ALGORITHM(proposal, prf, prf) {
+			for (const struct ike_alg **prfp = defaults->prf;
+			     (*prfp) != NULL; prfp++) {
 				const struct integ_desc *integ = NULL;
 				for (const struct integ_desc **integp = next_integ_desc(NULL);
 				     integp != NULL; integp = next_integ_desc(integp)) {
 					if ((*integp)->prf != NULL &&
-					    &(*integp)->prf->common == prf->desc) {
+					    &(*integp)->prf->common == (*prfp)) {
 						integ = *integp;
 						break;
 					}
 				}
 				if (integ == NULL) {
-					proposal_error(parser, "%s integrity derived from PRF %s is not supported",
-						       parser->protocol->name,
-						       prf->desc->fqn);
+					proposal_error(parser, "%s integrity derived from PRF '%s' is not supported",
+						       parser->protocol->name, (*prfp)->fqn);
 					return false;
 				}
-				append_algorithm(parser, proposal,
-						 &integ->common, 0);
+				append_algorithm(parser, proposal, &integ->common, 0/*ignore*/);
 			}
 		}
 	}
-	merge_algorithms(parser, proposal, PROPOSAL_dh, defaults->dh);
+	/* prf */
+	if (parser->protocol->prf &&
+	    next_algorithm(proposal, PROPOSAL_prf, NULL) == NULL) {
+		if (proposal_encrypt_aead(proposal)) {
+			/*
+			 * XXX: should convert integ algorithms to
+			 * PRFs
+			 */
+			merge_algorithms(parser, proposal, PROPOSAL_prf, defaults->prf);
+		} else {
+			/*
+			 * Since non-AEAD, use integrity algorithms
+			 * that are implemented using the PRFs.
+			 */
+			FOR_EACH_ALGORITHM(proposal, integ, alg) {
+				const struct integ_desc *integ = integ_desc(alg->desc);
+				if (integ->prf == NULL) {
+					proposal_error(parser, "%s integrity '%s' is not derived from a PDF",
+						       parser->protocol->name,
+						       integ->common.fqn);
+					return false;
+				}
+				append_algorithm(parser, proposal,
+						 &integ->prf->common, 0);
+			}
+		}
+	}
+	if (parser->protocol->dh &&
+	    next_algorithm(proposal, PROPOSAL_dh, NULL) == NULL) {
+		merge_algorithms(parser, proposal, PROPOSAL_dh, defaults->dh);
+	}
 	return true;
 }
 
