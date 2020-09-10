@@ -422,8 +422,8 @@ void jam_proposal(struct jambuf *log,
 	bool print_integ = (impair.proposal_parser ||
 			    /* no PRF */
 			    next_algorithm(proposal, PROPOSAL_prf, NULL) == NULL ||
-			    /* AEAD when not NONE */
-			    (proposal_encrypt_aead(proposal) && !proposal_integ_none(proposal)));
+			    /* alwas print AEAD integ */
+			    proposal_encrypt_aead(proposal));
 	/* non-AEAD when PRF and INTEG don't match */
 	if (!print_integ && proposal_encrypt_norm(proposal)) {
 		for (struct algorithm *integ = next_algorithm(proposal, PROPOSAL_integ, NULL),
