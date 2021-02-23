@@ -249,6 +249,7 @@ static bool verify_end_cert(struct logger *logger,
 		 */
 		enum cvout_param {
 			cvout_errorLog,
+			cvout_trustAnchor,
 			cvout_end,
 		};
 		CERTVerifyLog cvout_error_log = {
@@ -262,6 +263,10 @@ static bool verify_end_cert(struct logger *logger,
 				.type = cert_po_errorLog,
 				.value = { .pointer = { .log = &cvout_error_log } }
 			},
+			[cvout_trustAnchor] = {
+				.type = cert_po_trustAnchor,
+				.value = { .pointer = { .cert = NULL, }, },
+			},
 			[cvout_end] = {
 				.type = cert_po_end,
 			}
@@ -272,8 +277,13 @@ static bool verify_end_cert(struct logger *logger,
 		if (rv == SECSuccess) {
 			/* success! */
 			pexpect(cvout_error_log.count == 0 && cvout_error_log.head == NULL);
+			CERTCertificate *trust = cvout[cvout_trustAnchor].value.pointer.cert;
+			if (DBGP(DBG_BASE)) {
+				DBG_log("certificate is valid (profile %s) using trust %s",
+					p->usageName, trust != NULL ? trust->subjectName : "NO-TRUST");
+			}
+			CERT_DestroyCertificate(trust);
 			PORT_FreeArena(cvout_error_log.arena, PR_FALSE);
-			dbg("certificate is valid (profile %s)", p->usageName);
 			return true;
 		}
 
