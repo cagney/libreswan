@@ -1196,7 +1196,7 @@ int main(int argc, char **argv)
 			/* plutofork= no longer supported via config file */
 			log_param.log_with_timestamp = cfg->setup.options[KBF_LOGTIME];
 			log_append = cfg->setup.options[KBF_LOGAPPEND];
-			log_ip = cfg->setup.options[KBF_LOGIP];
+			// log_ip = cfg->setup.options[KBF_LOGIP];
 			log_to_audit = cfg->setup.options[KBF_AUDIT_LOG];
 			pluto_drop_oppo_null = cfg->setup.options[KBF_DROP_OPPO_NULL];
 			pluto_ddos_mode = cfg->setup.options[KBF_DDOS_MODE];
