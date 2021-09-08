@@ -2319,6 +2319,14 @@ void v2_dispatch(struct ike_sa *ike, struct msg_digest *md,
 	dbg("calling processor %s", svm->story);
 
 	/*
+	 * Limit the amount of wall clock time allowed before the
+	 * transaction is abandoned (killing the ike family).  Need to
+	 * first toss any existing event.
+	 */
+	event_delete(EVENT_v2_DISCARD, &ike->sa);
+	event_schedule(EVENT_v2_DISCARD, EXCHANGE_TIMEOUT_DELAY, &ike->sa);
+
+	/*
 	 * XXX: for now pass in NULL for the child.
 	 *
 	 * Should it be passing in the Message ID window that matched
