@@ -2705,7 +2705,7 @@ void complete_v2_state_transition(struct ike_sa *ike,
 		 * timeout.
 		 */
 		PEXPECT(ike->sa.logger, (ike->sa.st_event != NULL &&
-					 (ike->sa.st_event->ev_type == EVENT_CRYPTO_TIMEOUT)));
+					 (ike->sa.st_event->ev_type == EVENT_v1_CRYPTO_TIMEOUT)));
 		return;
 
 	case STF_IGNORE:

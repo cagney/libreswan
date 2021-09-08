@@ -234,8 +234,6 @@ enum event_type {
 
 	EVENT_RETRANSMIT,		/* v1/v2 retransmit IKE packet */
 
-	EVENT_CRYPTO_TIMEOUT,		/* v1/v2 after some time, give up on crypto helper */
-
 	/*
 	 * For IKEv2 'replace' is really either a re-key a full
 	 * replace, or expire.  IKEv1 should be the same but isn't.
@@ -247,6 +245,7 @@ enum event_type {
 	EVENT_v1_PAM_TIMEOUT,		/* v1 give up on PAM helper */
 	EVENT_v1_EXPIRE,		/* v1 SA expiration event */
 	EVENT_v1_DISCARD,		/* v1 discard unfinished state object */
+	EVENT_v1_CRYPTO_TIMEOUT,	/* v1 after some time, give up on crypto helper */
 	EVENT_v1_REPLACE,		/* v1 replacement event */
 
 	EVENT_v2_REKEY,			/* SA rekey event */
@@ -279,7 +278,7 @@ enum event_type {
 #ifndef RETRANSMIT_INTERVAL_DEFAULT_MS
 # define RETRANSMIT_INTERVAL_DEFAULT_MS	500 /* wait time doubled each retransmit - in milliseconds */
 #endif
-#define EVENT_CRYPTO_TIMEOUT_DELAY	deltatime(RETRANSMIT_TIMEOUT_DEFAULT) /* wait till the other side give up on us */
+#define EVENT_v1_CRYPTO_TIMEOUT_DELAY	deltatime(RETRANSMIT_TIMEOUT_DEFAULT) /* wait till the other side give up on us */
 #define EVENT_v1_PAM_TIMEOUT_DELAY	deltatime(RETRANSMIT_TIMEOUT_DEFAULT) /* wait until this side give up on PAM */
 
 #define REVIVE_CONN_DELAY	deltatime(5) /* seconds */

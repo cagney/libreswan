@@ -2434,7 +2434,7 @@ void complete_v1_state_transition(struct state *st, struct msg_digest *md, stf_s
 		 * timeout.
 		 */
 		PEXPECT(st->logger, (st->st_event != NULL &&
-				     (st->st_event->ev_type == EVENT_CRYPTO_TIMEOUT ||
+				     (st->st_event->ev_type == EVENT_v1_CRYPTO_TIMEOUT ||
 				      st->st_event->ev_type == EVENT_v1_PAM_TIMEOUT)));
 		return;
 	case STF_IGNORE:

@@ -363,7 +363,7 @@ void submit_task(const struct logger *logger,
 	 * STF_SUSPEND will be looking for this.
 	 */
 	delete_event(st);
-	event_schedule(EVENT_CRYPTO_TIMEOUT, EVENT_CRYPTO_TIMEOUT_DELAY, st);
+	event_schedule(EVENT_v1_CRYPTO_TIMEOUT, EVENT_v1_CRYPTO_TIMEOUT_DELAY, st);
 
 	/*
 	 * do it all ourselves?
@@ -390,6 +390,28 @@ void submit_task(const struct logger *logger,
 		schedule_callback("inline crypto", delay,
 				  SOS_NOBODY, inline_worker, job);
 		return;
+	} else {
+		switch (st->st_ike_version) {
+		case IKEv1:
+			/*
+			 * XXX: Danger:
+			 *
+			 * Clearing retransmits here is wrong, for
+			 * instance when crypto is being run in the
+			 * background.
+			 */
+			delete_event(st);
+			clear_retransmits(st);
+			event_schedule(EVENT_v1_CRYPTO_TIMEOUT, EVENT_v1_CRYPTO_TIMEOUT_DELAY, st);
+			break;
+		case IKEv2:
+			/*
+			 * IKEv2 has a global timer running.
+			 */
+			break;
+		}
+		/* add to backlog */
+		message_helpers(job);
 	}
 
 	if (detach_whack) {
