@@ -320,10 +320,10 @@ void submit_task(const struct logger *logger,
 		 const struct task_handler *handler,
 		 where_t where)
 {
-	if (st->st_offloaded_task != NULL) {
+	if (st->st_offloaded.job != NULL) {
 		llog_pexpect(st->logger, where,
 			     "state already has outstanding crypto ["PRI_WHERE"]",
-			     pri_where(st->st_offloaded_task->where));
+			     pri_where(st->st_offloaded.job->where));
 		return;
 	}
 
@@ -353,8 +353,10 @@ void submit_task(const struct logger *logger,
 	/*
 	 * Save in case it needs to be cancelled.
 	 */
-	st->st_offloaded_task = job;
-	st->st_offloaded_task_in_background = false;
+
+	pexpect(st->st_offloaded.job == NULL);
+	st->st_offloaded.job = job;
+	st->st_offloaded.in_background = false;
 	job->logger = clone_logger(logger, HERE);
 	ldbg(job->logger, PRI_JOB": added to pending queue", pri_job(job));
 
@@ -404,13 +406,13 @@ void delete_cryptographic_continuation(struct state *st)
 {
 	passert(in_main_thread());
 	passert(st->st_serialno != SOS_NOBODY);
-	struct job *job = st->st_offloaded_task;
+	struct job *job = st->st_offloaded.job;
 	if (job == NULL) {
 		return;
 	}
 	/* shut it down */
 	job->cancelled = true;
-	st->st_offloaded_task = NULL;
+	st->st_offloaded.job = NULL;
 	/* thread pool will throw the task back for cleanup */
 }
 
@@ -448,7 +450,7 @@ static stf_status handle_helper_answer(struct state *st,
 	if (job->cancelled) {
 		/* suppressed */
 		ldbg(job->logger, PRI_JOB": job cancelled!", pri_job(job));
-		pexpect(st == NULL || st->st_offloaded_task == NULL);
+		pexpect(st == NULL || st->st_offloaded.job == NULL);
 		status = STF_SKIP_COMPLETE_STATE_TRANSITION;
 	} else if (st == NULL) {
 		/* oops, the state disappeared! */
@@ -456,9 +458,9 @@ static stf_status handle_helper_answer(struct state *st,
 		status = STF_SKIP_COMPLETE_STATE_TRANSITION;
 	} else {
 		ldbg(job->logger, PRI_JOB": calling state's callback function", pri_job(job));
-		pexpect(st->st_offloaded_task == job);
-		st->st_offloaded_task = NULL;
-		st->st_offloaded_task_in_background = false;
+		pexpect(st->st_offloaded.job == job);
+		st->st_offloaded.job = NULL;
+		st->st_offloaded.in_background = false;
 		/* bill the thread time */
 		cpu_usage_add(st->st_timing.helper_usage, job->time_used);
 		/* wall clock time not billed */

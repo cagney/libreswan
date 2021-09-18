@@ -1565,7 +1565,7 @@ static bool is_duplicate_request_msgid(struct ike_sa *ike,
 	 */
 
 	struct v2_incoming_fragments *frags = ike->sa.st_v2_incoming[MESSAGE_REQUEST];
-	if (ike->sa.st_offloaded_task_in_background) {
+	if (ike->sa.st_offloaded.in_background) {
 		/*
 		 * The IKE SA responder is in the twilight zone:
 		 *

@@ -247,8 +247,8 @@ static void show_state(struct show *s, struct state *st, const monotime_t now)
 			jam(buf, " nodpd;");
 		}
 
-		if (st->st_offloaded_task != NULL &&
-		    !st->st_offloaded_task_in_background) {
+		if (st->st_offloaded.job != NULL &&
+		    !st->st_offloaded.in_background) {
 			jam(buf, " crypto_calculating;");
 		} else if (st->st_suspended_md != NULL) {
 			jam(buf, " crypto/dns-lookup;");

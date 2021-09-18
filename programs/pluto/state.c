@@ -1835,49 +1835,46 @@ struct msg_digest *unsuspend_any_md_where(struct state *st, where_t where)
 bool state_is_busy(const struct state *st)
 {
 	passert(st != NULL);
+	/* see also show_state() */
 	/*
-	 * Ignore a packet if the state has a suspended state
-	 * transition.  Probably a duplicated packet but the original
-	 * packet is not yet recorded in st->st_v1_rpacket, so duplicate
-	 * checking won't catch.
-	 *
-	 * ??? Should the packet be recorded earlier to improve
-	 * diagnosis?
-	 *
-	 * See comments in state.h.
-	 *
-	 * ST_SUSPENDED.MD acts as a poor proxy for indicating a busy
-	 * state.  For instance, the initial initiator (both IKEv1 and
-	 * IKEv2) doesn't have a suspended MD.  To get around this a
-	 * 'fake_md' MD is created.
-	 *
-	 * XXX: what about xauth? It sets ST_SUSPENDED.MD.
+	 * Has work been offloaded mid state transition (but not in
+	 * the background).
 	 */
-	if (st->st_suspended_md != NULL) {
-		dbg("#%lu is busy; has suspended MD %p",
-		    st->st_serialno, st->st_suspended_md);
-		return true;
-	}
-	/*
-	 * If IKEv1 is doing something in the background then the
-	 * state isn't busy.
-	 */
-	if (st->st_offloaded_task_in_background) {
-		pexpect(st->st_offloaded_task != NULL);
-		dbg("#%lu is idle; has background offloaded task",
+	if (st->st_offloaded.in_background) {
+		dbg("#%lu is idle; has something offloaded in the background",
 		    st->st_serialno);
+		pexpect(st->st_suspended_md == NULL); /* for now */
+		/* these don't use background */
+		pexpect(st->ipseckey_dnsr == NULL);
+		pexpect(st->st_pam_auth == NULL);
+		/* these do use background */
+		pexpect(st->st_offloaded.job != NULL);
+		return false;
+	} else if (st->st_offloaded.story != NULL) {
+		dbg("#%lu is busy; offloaded %s",
+		    st->st_serialno, st->st_offloaded.story);
+		return true;
+	} else if (st->st_offloaded.job != NULL) {
+		dbg("#%lu is busy; has an offloaded job",
+		    st->st_serialno);
+		return true;
+	} else if (st->ipseckey_dnsr != NULL) {
+		dbg("#%lu is busy; has offloaded DNS",
+		    st->st_serialno);
+		return true;
+#ifdef USE_PAM_AUTH
+	} else if (st->st_pam_auth != NULL) {
+		dbg("#%lu is busy; has offloaded PAM auth",
+		    st->st_serialno);
+		return true;
+#endif
+	} else if (!pexpect(st->st_suspended_md == NULL)) {
+		dbg("#%lu is busy; has suspended md", st->st_serialno);
+		return true;
+	} else {
+		dbg("#%lu is idle", st->st_serialno);
 		return false;
 	}
-	/*
-	 * If this state is busy calculating.
-	 */
-	if (st->st_offloaded_task != NULL) {
-		dbg("#%lu is busy; has an offloaded task",
-		    st->st_serialno);
-		return true;
-	}
-	dbg("#%lu is idle", st->st_serialno);
-	return false;
 }
 
 bool verbose_state_busy(const struct state *st)
@@ -1887,7 +1884,7 @@ bool verbose_state_busy(const struct state *st)
 		return false;
 	}
 	if (!state_is_busy(st)) {
-		dbg("#%lu idle", st->st_serialno);
+		/* already debug-logged */
 		return false;
 	}
 	if (st->st_suspended_md != NULL) {
@@ -1897,7 +1894,7 @@ bool verbose_state_busy(const struct state *st)
 		log_state(LOG_STREAM/*not-whack*/, st,
 			  "discarding packet received during asynchronous work (DNS or crypto) in %s",
 			  st->st_state->name);
-	} else if (st->st_offloaded_task != NULL) {
+	} else if (st->st_offloaded.job != NULL) {
 		log_state(RC_LOG, st, "message received while calculating. Ignored.");
 	}
 	return true;

@@ -704,9 +704,9 @@ void process_v2_request_no_skeyseed(struct ike_sa *ike, struct msg_digest *md)
 	 * If fragments are accumulating, and not already started,
 	 * kick off SKEYSEED.
 	 */
-	if (!ike->sa.st_offloaded_task_in_background) {
+	if (!ike->sa.st_offloaded.in_background) {
 		submit_dh_shared_secret(&ike->sa, &ike->sa, ike->sa.st_gi/*responder needs initiator KE*/,
 					process_v2_request_no_skeyseed_continue, HERE);
-		ike->sa.st_offloaded_task_in_background = true;
+		ike->sa.st_offloaded.in_background = true;
 	}
 }

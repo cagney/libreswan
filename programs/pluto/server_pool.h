@@ -44,8 +44,8 @@ struct logger;
 struct task; /*struct job*/
 
 typedef void task_computer_fn(struct logger *logger,
-			       struct task *task,
-			       int my_thread);
+			      struct task *task,
+			      int my_thread);
 /* might be called */
 typedef stf_status task_completed_cb(struct state *st,
 				     struct msg_digest *md,

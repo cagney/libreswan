@@ -584,11 +584,11 @@ struct state {
 					 */
 
 	/*
-	 * ST_OFFLOADED_TASK, when non-NULL, is the task that has been
-	 * offloaded to a crypto helper (or for that matter a child
-	 * process or anything).
+	 * ST_OFFLOADED.JOB, when non-NULL, is the job that has been
+	 * off-loaded, typically to a crypto helper (or for that
+	 * matter a child process or anything).
 	 *
-	 * ST_V1_OFFLOADED_TASK_IN_BACKGROUND is more complicated:
+	 * ST_OFFLOADED.IN_BACKGROUND is more complicated:
 	 *
 	 * In IKEv1, the responder in main mode state MAIN_R1, after
 	 * sending its KE+NONCE, will kick off the shared DH secret
@@ -621,8 +621,11 @@ struct state {
 	 * (before ST_OFFLOADED_TASK was added), its presence would
 	 * have also served as a state-is-busy marker.
 	 */
-	struct job *st_offloaded_task;
-	bool st_offloaded_task_in_background;
+	struct {
+		const char *story;
+		bool in_background;
+		struct job *job;
+	} st_offloaded;
 
 	struct msg_digest *st_suspended_md;  /* suspended state-transition */
 

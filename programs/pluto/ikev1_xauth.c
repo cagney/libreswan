@@ -1147,6 +1147,7 @@ static stf_status xauth_immediate_callback(struct state *st,
 			  xic->serialno, xic->name);
 	} else {
 		/* ikev1_xauth_callback() will log result */
+		st->st_offloaded.story = NULL;
 		ikev1_xauth_callback(st, md, xic->name, xic->success);
 	}
 	pfree(xic->name);
@@ -1154,13 +1155,15 @@ static stf_status xauth_immediate_callback(struct state *st,
 	return STF_SKIP_COMPLETE_STATE_TRANSITION;
 }
 
-static void xauth_immediate(const char *name, const struct state *st, bool success)
+static void xauth_immediate(const char *story, const char *name,
+			    struct state *st, bool success)
 {
 	struct xauth_immediate_context *xic = alloc_thing(struct xauth_immediate_context, "xauth next");
 	xic->success = success;
 	xic->serialno = st->st_serialno;
-	xic->name = clone_str(name, "xauth next name");
-	schedule_resume("xauth immediate", st->st_serialno,
+	xic->name = clone_str(name, "xauth immediate name");
+	st->st_offloaded.story = story;
+	schedule_resume(story, st->st_serialno,
 			xauth_immediate_callback, xic);
 }
 
@@ -1211,14 +1214,14 @@ static void xauth_launch_authent(struct state *st,
 			  "XAUTH: password file authentication method requested to authenticate user '%s'",
 			  arg_name);
 		bool success = do_file_authentication(st, arg_name, arg_password, st->st_connection->name);
-		xauth_immediate(arg_name, st, success);
+		xauth_immediate("password file authentication", arg_name, st, success);
 		break;
 
 	case XAUTHBY_ALWAYSOK:
 		log_state(RC_LOG, st,
 			  "XAUTH: authentication method 'always ok' requested to authenticate user '%s'",
 			  arg_name);
-		xauth_immediate(arg_name, st, true);
+		xauth_immediate("'always ok' authentication", arg_name, st, true);
 		break;
 
 	default:
