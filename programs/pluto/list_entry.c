@@ -61,9 +61,10 @@ void jam_list_entry(struct jambuf *buf, const struct list_entry *entry)
 	}
 }
 
-static void log_entry(const char *op, struct list_entry *entry)
+static void dbg_entry(const char *op, struct list_entry *entry)
 {
 	passert(entry != NULL);
+	passert(entry->info != NULL);
 	LDBGP_JAMBUF(DBG_TMI, &global_logger, buf) {
 		jam(buf, "%s: %s ", entry->info->name, op);
 		jam_list_entry(buf, entry);
@@ -148,7 +149,7 @@ void insert_list_entry(struct list_head *list,
 
 void remove_list_entry(struct list_entry *entry)
 {
-	log_entry("removing", entry);
+	dbg_entry("removing", entry);
 
 	/* entry is not a list head */
 	passert_entry(entry, entry->info != NULL);
@@ -167,7 +168,7 @@ void remove_list_entry(struct list_entry *entry)
 	if (older == newer) {
 		DBGF(DBG_TMI, "%s: empty", entry->info->name);
 	} else {
-		log_entry("updated older", older);
-		log_entry("updated newer ", newer);
+		dbg_entry("updated older", older);
+		dbg_entry("updated newer ", newer);
 	}
 }
