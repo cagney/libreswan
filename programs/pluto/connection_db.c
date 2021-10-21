@@ -248,9 +248,9 @@ bool next_connection(enum chrono adv, struct connection_filter *filter)
 	/* Walk list until an entry matches */
 	filter->c = NULL;
 	for (struct list_entry *entry = filter->internal;
-	     entry->data != NULL /* head has DATA == NULL */;
+	     entry->info != NULL /* head has .INFO == NULL */;
 	     entry = entry->next[adv]) {
-		struct connection *c = (struct connection *) entry->data;
+		struct connection *c = list_entry_data(entry);
 		if (matches_connection_filter(c, filter)) {
 			/* save connection; but step off current entry */
 			filter->internal = entry->next[adv];

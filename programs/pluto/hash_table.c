@@ -63,9 +63,9 @@ void init_hash_table_entry(struct hash_table *table, void *data)
 
 void add_hash_table_entry(struct hash_table *table, void *data)
 {
-	struct list_entry *entry = table->entry(data);
 	hash_t hash = table->hasher(data);
 	struct list_head *bucket = hash_table_bucket(table, hash);
+	struct list_entry *entry = data_list_entry(table->info, data);
 	insert_list_entry(bucket, entry);
 	table->nr_entries++;
 	LDBGP_JAMBUF(DBG_TMI, &global_logger, buf) {
@@ -83,7 +83,7 @@ void del_hash_table_entry(struct hash_table *table, void *data)
 		/* HEAD AKA BUCKET isn't directly known */
 		jam(buf, " deleted from hash table");
 	}
-	struct list_entry *entry = table->entry(data);
+	struct list_entry *entry = data_list_entry(table->info, data);
 	remove_list_entry(entry);
 	table->nr_entries--;
 }
@@ -99,8 +99,9 @@ static void check_hash_table_entry(struct hash_table *table, void *data,
 				   struct logger *logger, where_t where)
 {
 	hash_t hash = table->hasher(data);
+	struct list_entry *data_entry = data_list_entry(table->info, data);
 	/* not inserted (might passert) */
-	if (detached_list_entry(table->entry(data))) {
+	if (detached_list_entry(data_entry)) {
 		return;
 	}
 	/* hope for the best ... */

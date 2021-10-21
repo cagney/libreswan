@@ -80,9 +80,9 @@ bool next_spd_route(enum chrono order, struct spd_route_filter *filter)
 	/* Walk list until an entry matches */
 	filter->spd = NULL;
 	for (struct list_entry *entry = filter->internal;
-	     entry->data != NULL /* head has DATA == NULL */;
+	     list_entry_data(entry) != NULL /* head has DATA == NULL */;
 	     entry = entry->next[order]) {
-		struct spd_route *spd = (struct spd_route *) entry->data;
+		struct spd_route *spd = list_entry_data(entry);
 		if (matches_spd_route_filter(spd, filter)) {
 			/* save connection; but step off current entry */
 			filter->internal = entry->next[order];

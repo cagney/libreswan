@@ -52,10 +52,10 @@ void jam_list_entry(struct jambuf *buf, const struct list_entry *entry)
 	if (entry == NULL) {
 		jam(buf, "(null)");
 	} else {
-		if (entry->data == NULL) {
+		if (entry->info == NULL) {
 			jam(buf, "HEAD");
 		} else {
-			entry->info->jam(buf, entry->data);
+			entry->info->jam(buf, list_entry_data(entry));
 		}
 		jam(buf, " %p<-%p->%p", entry->next[NEW2OLD], entry, entry->next[OLD2NEW]);
 	}
@@ -83,41 +83,33 @@ void init_list_entry(const struct list_info *info, void *data, struct list_entry
 	passert_info(info, entry != NULL);
 	/* not initialized */
 	passert_info(info, entry->info == NULL);
-	passert_info(info, entry->data == NULL);
 	passert_info(info, entry->next[OLD2NEW] == NULL);
 	passert_info(info, entry->next[NEW2OLD] == NULL);
-#if 0
 	/* cross-check */
 	passert_info(info, entry == data_list_entry(info, data));
-#endif
 	/* initialize */
 	*entry = (struct list_entry) {
 		.info = info,
-		.data = data,
 	};
 }
 
-#if 0
 struct list_entry *data_list_entry(const struct list_info *info, void *data)
 {
 	uint8_t *ptr = data;
 	struct list_entry *entry = (void *)(ptr + info->offset);
 	return entry;
 }
-#endif
 
-#if 0
 void *list_entry_data(const struct list_entry *entry)
 {
 	passert(entry->info != NULL);
 	uint8_t *offptr = (void*)entry;
 	return offptr - entry->info->offset;
 }
-#endif
 
 bool detached_list_entry(const struct list_entry *entry)
 {
-	passert_entry(entry, entry->data != NULL);	/* entry is not a list head */
+	passert_entry(entry, entry->info != NULL);	/* entry is not a list head */
 	passert_entry(entry, (entry->next[OLD2NEW] == NULL) == (entry->next[OLD2NEW] == NULL));
 	return entry->next[OLD2NEW] == NULL;
 }
@@ -125,8 +117,10 @@ bool detached_list_entry(const struct list_entry *entry)
 void insert_list_entry(struct list_head *list,
 		       struct list_entry *entry)
 {
-	passert_entry(entry, entry->info != NULL);
-	passert_entry(entry, entry->data != NULL);
+	if (entry->info == NULL) {
+		entry->info = list->info;
+	}
+	passert(detached_list_entry(entry));
 	LDBGP_JAMBUF(DBG_TMI, &global_logger, buf) {
 		jam(buf, "%s: inserting ",
 		    entry->info->name);
@@ -134,8 +128,7 @@ void insert_list_entry(struct list_head *list,
 		jam(buf, " into list ");
 		jam_list_entry(buf, &list->head);
 	}
-	passert_entry(entry, list->head.info == entry->info);
-	passert_entry(entry, entry->data != NULL);
+	passert_entry(entry, list->info == entry->info);
 	passert_entry(entry, entry->next[NEW2OLD] == NULL && entry->next[OLD2NEW] == NULL);
 	passert_entry(entry, list->head.next[NEW2OLD] != NULL && list->head.next[OLD2NEW] != NULL);
 	/* insert at the front */
@@ -158,7 +151,7 @@ void remove_list_entry(struct list_entry *entry)
 	log_entry("removing", entry);
 
 	/* entry is not a list head */
-	passert_entry(entry, entry->data != NULL);
+	passert_entry(entry, entry->info != NULL);
 
 	/* unlink: older - entry - newer */
 	struct list_entry *newer = entry->next[OLD2NEW];

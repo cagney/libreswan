@@ -409,9 +409,9 @@ bool next_state(enum chrono adv, struct state_filter *filter)
 	filter->st = NULL;
 	/* Walk list until an entry matches */
 	for (struct list_entry *entry = filter->internal;
-	     entry->data != NULL /* head has DATA == NULL */;
+	     entry->info != NULL /* head has INFO == NULL */;
 	     entry = entry->next[adv]) {
-		struct state *st = (struct state *) entry->data;
+		struct state *st = list_entry_data(entry);
 		if (matches_filter(st, filter)) {
 			/* save state; but step off current entry */
 			filter->internal = entry->next[adv];

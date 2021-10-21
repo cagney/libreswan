@@ -72,7 +72,6 @@ enum chrono {
 
 struct list_entry {
 	struct list_entry *next[CHRONO_ROOF];
-	void *data;
 	const struct list_info *info;
 };
 
@@ -86,16 +85,17 @@ void jam_list_entry(struct jambuf *buf, const struct list_entry *entry);
  */
 
 struct list_head {
+	const struct list_info *info;
 	struct list_entry head;
 };
 
 #define INIT_LIST_HEAD(LIST_HEAD_PTR, LIST_INFO_PTR)			\
 	{								\
 		.head = {						\
-			.info = (LIST_INFO_PTR),			\
 			.next[NEW2OLD] = &(LIST_HEAD_PTR)->head,	\
 			.next[OLD2NEW] = &(LIST_HEAD_PTR)->head,	\
 		},							\
+		.info = (LIST_INFO_PTR),				\
 	}
 
 /*
@@ -109,10 +109,8 @@ struct list_head {
 
 void init_list_entry(const struct list_info *info, void *data, struct list_entry *entry);
 
-#if 0
 struct list_entry *data_list_entry(const struct list_info *info, void *data);
 void *list_entry_data(const struct list_entry *entry);
-#endif
 
 bool detached_list_entry(const struct list_entry *entry);
 
@@ -124,24 +122,25 @@ void remove_list_entry(struct list_entry *entry);
  * Iterate through all the entries in the list in either old-to-new or
  * new-to-old order.
  *
- * So that the current entry can be deleted, the E##entry pointer is
- * always on the next entry.
+ * So that the current entry can be deleted, the E##entry pointer
+ * advanced before entering the loop body.
  *
- * Since a non-empty list loops back to HEAD, HEAD's .data==NULL acts
- * as the sentinel; and DATA is left with that NULL value.
+ * Since a non-empty list loops back to HEAD, HEAD's .info==NULL acts
+ * as the sentinel.  When this is reached, DATA is left with a NULL
+ * value.
  */
 
 #define FOR_EACH_LIST_ENTRY_(DATA, HEAD, NEXT)				\
 									\
-	/* entry = either first entry or back at head */		\
+	/* entry = either first entry or back at head (.info==NULL) */	\
 	for (struct list_entry *entry_ = (HEAD)->head.next[NEXT];	\
-	     entry_ != NULL; entry_ = NULL)				\
+	     entry_ != NULL && entry_->info != NULL; entry_ = NULL)	\
 									\
 		/* DATA = ENTRY->data; ENTRY = ENTRY->NEXT */		\
-		for (DATA = (typeof(DATA))entry_->data,			\
+		for (DATA = list_entry_data(entry_),			\
 			     entry_ = entry_->next[NEXT];		\
 		     DATA != NULL;					\
-		     DATA = (typeof(DATA))entry_->data,			\
+		     DATA = (entry_->info != NULL ? list_entry_data(entry_) : NULL), \
 			     entry_ = entry_->next[NEXT])
 
 #define FOR_EACH_LIST_ENTRY_OLD2NEW(DATA, HEAD)		\
@@ -158,7 +157,7 @@ void remove_list_entry(struct list_entry *entry);
 		} else {						\
 			next_ = DATA->FIELD.next[NEXT];			\
 		}							\
-		(typeof(DATA)) (next_ == NULL ? NULL : next_->data);	\
+		(typeof(DATA)) (next_ == NULL ? NULL : list_entry_data(next_)); \
 	})
 
 #endif
