@@ -263,6 +263,5 @@ stf_status process_v2_IKE_SA_INIT_response_v2N_COOKIE(struct ike_sa *ike,
 	/*
 	 * restart the IKE SA with new information
 	 */
-	schedule_reinitiate_v2_ike_sa_init(ike, resume_IKE_SA_INIT_with_cookie);
-	return STF_OK;
+	return schedule_restart_v2_ike_sa_init(ike, resume_IKE_SA_INIT_with_cookie);
 }

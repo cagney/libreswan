@@ -88,7 +88,7 @@
 #include "terminate.h"
 #include "ikev2_parent.h"
 
-static callback_cb reinitiate_v2_ike_sa_init;	/* type assertion */
+static callback_cb restart_ike_sa_init;	/* type assertion */
 
 static void process_packet_with_secured_ike_sa(struct msg_digest *mdp, struct ike_sa *ike);
 
@@ -2839,7 +2839,7 @@ void complete_v2_state_transition(struct ike_sa *ike,
 	connection_delete_ike_family(&ike, HERE);
 }
 
-static void reinitiate_v2_ike_sa_init(const char *story, struct state *st, void *arg)
+static void restart_ike_sa_init(const char *story, struct state *st, void *arg)
 {
 	stf_status (*resume)(struct ike_sa *ike) = arg;
 
@@ -2900,12 +2900,13 @@ static void reinitiate_v2_ike_sa_init(const char *story, struct state *st, void 
 	statetime_stop(&start, "processing: %s in %s()", story, __func__);
 }
 
-void schedule_reinitiate_v2_ike_sa_init(struct ike_sa *ike,
-					stf_status (*resume)(struct ike_sa *ike))
+stf_status schedule_restart_v2_ike_sa_init(struct ike_sa *ike,
+				     stf_status (*resume)(struct ike_sa *ike))
 {
 	schedule_callback("reinitiating IKE_SA_INIT", deltatime(0),
 			  ike->sa.st_serialno,
-			  reinitiate_v2_ike_sa_init, resume);
+			  restart_ike_sa_init, resume);
+	return STF_SUSPEND;
 }
 
 bool v2_notification_fatal(v2_notification_t n)

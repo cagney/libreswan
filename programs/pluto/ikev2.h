@@ -39,8 +39,8 @@ extern void complete_v2_state_transition(struct ike_sa *ike,
 					 struct msg_digest *mdp,
 					 stf_status result);
 
-void schedule_reinitiate_v2_ike_sa_init(struct ike_sa *ike,
-					stf_status (*resume)(struct ike_sa *ike));
+stf_status schedule_restart_v2_ike_sa_init(struct ike_sa *ike,
+					   stf_status (*resume)(struct ike_sa *ike));
 
 struct crypt_mac ikev2_rsa_sha1_hash(const struct crypt_mac *hash);
 

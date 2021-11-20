@@ -1397,8 +1397,7 @@ stf_status process_v2_IKE_SA_INIT_response_v2N_INVALID_KE_PAYLOAD(struct ike_sa 
 	/*
 	 * get a new KE
 	 */
-	schedule_reinitiate_v2_ike_sa_init(ike, resubmit_ke_and_nonce);
-	return STF_OK;
+	return schedule_restart_v2_ike_sa_init(ike, resubmit_ke_and_nonce);
 }
 
 /* STATE_V2_PARENT_I1: R1 --> I2
