@@ -326,12 +326,8 @@ const struct pickler pickle_unpacker = {
 #define PICKLE_CONSTANT_STRING(FIELD, VALUE) pickle->constant_string(wp, FIELD, VALUE, #FIELD, logger)
 #define PICKLE_IP_INFO(FIELD) pickle->ip_info(wp, FIELD, #FIELD, logger)
 
-#if 0
 #define PICKLE_CIDR(CIDR) \
-	((CIDR)->is_set ? pickle->ip_info(wp, &((CIDR)->info), #CIDR) : true)
-#else
-#define PICKLE_CIDR(CIDR) true
-#endif
+	((CIDR)->is_set ? pickle->ip_info(wp, &((CIDR)->info), #CIDR, logger) : true)
 
 static bool pickle_whack_end(struct whackpacker *wp,
 			     const char *leftright,

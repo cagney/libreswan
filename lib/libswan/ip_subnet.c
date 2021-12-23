@@ -55,7 +55,7 @@ ip_subnet subnet_from_cidr(const ip_cidr cidr)
 		return unset_subnet;
 	}
 
-	return subnet_from_raw(HERE, cidr.version,
+	return subnet_from_raw(HERE, cidr.info->ip_version,
 			       ip_bytes_blit(afi, cidr.bytes,
 					     &keep_routing_prefix,
 					     &clear_host_identifier,

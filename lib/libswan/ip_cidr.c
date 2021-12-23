@@ -22,7 +22,8 @@
 
 const ip_cidr unset_cidr;
 
-ip_cidr cidr_from_raw(where_t where, enum ip_version version,
+ip_cidr cidr_from_raw(where_t where,
+		      const struct ip_info *info,
 		      const struct ip_bytes bytes,
 		      unsigned prefix_len)
 {
@@ -30,7 +31,7 @@ ip_cidr cidr_from_raw(where_t where, enum ip_version version,
  	/* combine */
 	ip_cidr cidr = {
 		.is_set = true,
-		.version = version,
+		.info = info,
 		.bytes = bytes,
 		.prefix_len = prefix_len,
 	};
@@ -46,7 +47,7 @@ ip_cidr cidr_from_address_prefix_len(ip_address address, unsigned prefix_len)
 	}
 
 	/* contains both routing-prefix and host-identifier */
-	return cidr_from_raw(HERE, address.version, address.bytes, prefix_len);
+	return cidr_from_raw(HERE, ip_version_info(address.version), address.bytes, prefix_len);
 
 }
 
@@ -67,7 +68,7 @@ const struct ip_info *cidr_info(const ip_cidr cidr)
 	}
 
 	/* may return NULL */
-	return ip_version_info(cidr.version);
+	return cidr.info;
 }
 
 ip_address cidr_address(const ip_cidr cidr)
@@ -77,7 +78,7 @@ ip_address cidr_address(const ip_cidr cidr)
 		return unset_address;
 	}
 
-	return address_from_raw(HERE, cidr.version, cidr.bytes);
+	return address_from_raw(HERE, cidr.info->ip_version, cidr.bytes);
 }
 
 ip_address cidr_prefix(const ip_cidr cidr)
@@ -86,7 +87,7 @@ ip_address cidr_prefix(const ip_cidr cidr)
 	if (afi == NULL) {
 		return unset_address;
 	}
-	return address_from_raw(HERE, cidr.version,
+	return address_from_raw(HERE, cidr.info->ip_version,
 				ip_bytes_blit(afi, cidr.bytes,
 					      &keep_routing_prefix,
 					      &clear_host_identifier,
@@ -167,7 +168,7 @@ err_t ttocidr_num(shunk_t src, const struct ip_info *afi, ip_cidr *cidr)
 	}
 
 	/* combine */
-	*cidr = cidr_from_raw(HERE, addr.version, addr.bytes, maskbits);
+	*cidr = cidr_from_raw(HERE, ip_version_info(addr.version), addr.bytes, maskbits);
 	return NULL;
 }
 
@@ -198,7 +199,7 @@ const char *str_cidr(const ip_cidr *cidr, cidr_buf *out)
 void pexpect_cidr(const ip_cidr cidr, where_t where)
 {
 	if (cidr.is_set == false ||
-	    cidr.version == 0) {
+	    cidr.info == NULL) {
 		llog_pexpect(&global_logger, where, "invalid "PRI_CIDR, pri_cidr(cidr));
 	}
 }
@@ -216,7 +217,7 @@ bool cidr_eq_cidr(const ip_cidr l, const ip_cidr r)
 		return false;
 	}
 	/* must compare individual fields */
-	return (l.version == r.version &&
-			l.prefix_len == r.prefix_len &&
+	return (l.info == r.info &&
+		l.prefix_len == r.prefix_len &&
 		thingeq(l.bytes, r.bytes));
 }

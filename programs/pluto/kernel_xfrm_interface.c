@@ -63,6 +63,7 @@
 # include "if_link_extra.h"
 #endif
 
+#include "ip_info.h"
 #include "lswalloc.h"
 #include "connections.h"
 #include "server.h" /* for struct iface_endpoint */
@@ -309,9 +310,9 @@ static int ip_addr_xfrmi_add(const char *if_name,
 	req = init_nl_ifa(RTM_NEWADDR, NLM_F_REQUEST | NLM_F_CREATE | NLM_F_EXCL);
 	req.ifa.ifa_index = if_nametoindex(if_name);
 	req.ifa.ifa_scope = IP_ADDR_GLOBAL_SCOPE;
-	req.ifa.ifa_family = ((xfrmi_ipaddr->if_ip.version == IPv4) ? AF_INET : AF_INET6);
+	req.ifa.ifa_family = xfrmi_ipaddr->if_ip.info->af;
 
-	uint8_t ipaddr_len = ((xfrmi_ipaddr->if_ip.version == IPv4) ? 4 : 16);
+	uint8_t ipaddr_len = xfrmi_ipaddr->if_ip.info->ip_size;
 	nl_addattr_l(&req.n, sizeof(req.data), IFA_LOCAL,   &xfrmi_ipaddr->if_ip.bytes, ipaddr_len);
 	nl_addattr_l(&req.n, sizeof(req.data), IFA_ADDRESS, &xfrmi_ipaddr->if_ip.bytes, ipaddr_len);
 	req.ifa.ifa_prefixlen = xfrmi_ipaddr->if_ip.prefix_len;
@@ -329,9 +330,9 @@ static int ip_addr_xfrmi_del(const char *if_name,
 	req = init_nl_ifa(RTM_DELADDR, NLM_F_REQUEST);
 	req.ifa.ifa_index = if_nametoindex(if_name);
 	req.ifa.ifa_scope = IP_ADDR_GLOBAL_SCOPE;
-	req.ifa.ifa_family = ((xfrmi_ipaddr->if_ip.version == IPv4) ? AF_INET : AF_INET6);
+	req.ifa.ifa_family = xfrmi_ipaddr->if_ip.info->af;
 
-	uint8_t ipaddr_len = ((xfrmi_ipaddr->if_ip.version == IPv4) ? 4 : 16);
+	uint8_t ipaddr_len = xfrmi_ipaddr->if_ip.info->ip_size;
 	nl_addattr_l(&req.n, sizeof(req.data), IFA_LOCAL,   &xfrmi_ipaddr->if_ip.bytes, ipaddr_len);
 	nl_addattr_l(&req.n, sizeof(req.data), IFA_ADDRESS, &xfrmi_ipaddr->if_ip.bytes, ipaddr_len);
 	req.ifa.ifa_prefixlen = xfrmi_ipaddr->if_ip.prefix_len;
@@ -718,7 +719,7 @@ static int parse_nl_newaddr_msg(struct nlmsghdr *nlmsg, struct ifinfo_response *
 
 	if (local_addr != NULL) {
 		struct pluto_xfrmi_ipaddr *if_ipaddr = create_xfrmi_ipaddr(&if_rsp->result_if);
-		if_ipaddr->if_ip.version = (local_addr_len == 4 ? IPv4 : IPv6);
+		if_ipaddr->if_ip.info = (local_addr_len == 4 ? &ipv4_info : &ipv6_info);
 		if_ipaddr->if_ip.is_set = true;
 		if_ipaddr->if_ip.prefix_len = ifa->ifa_prefixlen;
 		if_ipaddr->pluto_added = false;
@@ -1150,10 +1151,10 @@ static bool add_xfrm_interface_ip(struct connection *c, ip_cidr *conn_xfrmi_cidr
 		/* This call will refcount the object */
 		refd_xfrmi_ipaddr = create_xfrmi_ipaddr(c->xfrmi);
 		refd_xfrmi_ipaddr->if_ip = *conn_xfrmi_cidr; /* object copy */
-		inet_ntop(((conn_xfrmi_cidr->version == IPv4) ? AF_INET : AF_INET6),
-					conn_xfrmi_cidr->bytes.byte,
-					refd_xfrmi_ipaddr->if_ip_str,
-					MAX_IP_CIDR_STR_LEN);
+		inet_ntop(conn_xfrmi_cidr->info->af,
+			  conn_xfrmi_cidr->bytes.byte,
+			  refd_xfrmi_ipaddr->if_ip_str,
+			  MAX_IP_CIDR_STR_LEN);
 		snprintf(refd_xfrmi_ipaddr->if_ip_str + strlen(refd_xfrmi_ipaddr->if_ip_str),
 				MAX_IP_CIDR_STR_LEN, "/%d", refd_xfrmi_ipaddr->if_ip.prefix_len);
 		ldbg(logger,

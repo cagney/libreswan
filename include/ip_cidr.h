@@ -31,16 +31,16 @@ struct jambuf;
 
 typedef struct {
 	bool is_set;
-	enum ip_version version;
+	const struct ip_info *info;
 	struct ip_bytes bytes;
 	unsigned prefix_len;
 } ip_cidr;
 
-#define PRI_CIDR "<cidr-%s:IPv%d["PRI_IP_BYTES"]/%u>"
+#define PRI_CIDR "<cidr-%s:%s["PRI_IP_BYTES"]/%u>"
 #define pri_cidr(A)							\
 		((A).is_set ? "set" : "unset"),				\
-		(A).version,						\
-		pri_ip_bytes((A).bytes),					\
+		((A).info == NULL ? "IPv?" : (A).info->ip_name),	\
+		pri_ip_bytes((A).bytes),				\
 		(A).prefix_len
 
 void pexpect_cidr(const ip_cidr a, where_t where);
@@ -49,7 +49,8 @@ void pexpect_cidr(const ip_cidr a, where_t where);
 extern const ip_cidr unset_cidr;
 
 /* convert CIDR address/mask; does not judge the result */
-ip_cidr cidr_from_raw(where_t where, enum ip_version version,
+ip_cidr cidr_from_raw(where_t where,
+		      const struct ip_info *info,
 		      const struct ip_bytes bytes,
 		      unsigned prefix_bits);
 
