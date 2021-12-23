@@ -34,7 +34,7 @@ ip_cidr cidr_from_raw(where_t where,
  	/* combine */
 	ip_cidr cidr = {
 		.is_set = true,
-		.version = afi->ip_version,
+		.info = afi,
 		.bytes = bytes,
 		.prefix_len = prefix_len,
 	};
@@ -98,7 +98,7 @@ const struct ip_info *cidr_info(const ip_cidr cidr)
 	}
 
 	/* may return NULL */
-	return ip_version_info(cidr.version);
+	return cidr.info;
 }
 
 ip_address cidr_address(const ip_cidr cidr)
@@ -207,7 +207,7 @@ const char *str_cidr(const ip_cidr *cidr, cidr_buf *out)
 void pexpect_cidr(const ip_cidr cidr, where_t where)
 {
 	if (cidr.is_set == false ||
-	    cidr.version == 0) {
+	    cidr.info == NULL) {
 		llog_pexpect(&global_logger, where, "invalid "PRI_CIDR, pri_cidr(cidr));
 	}
 }
