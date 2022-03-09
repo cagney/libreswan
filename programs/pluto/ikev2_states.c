@@ -97,23 +97,24 @@ struct finite_state v2_states[] = {
 
 	/* IKE exchange can also create a child */
 
-	S(STATE_V2_IKE_AUTH_CHILD_I0, "ephemeral: initiator creating child from IKE exchange", CAT_IGNORE),
-	S(STATE_V2_IKE_AUTH_CHILD_R0, "ephemeral: responder creating child from IKE exchange", CAT_IGNORE),
+	S(STATE_V2_IKE_AUTH_CHILD_I0, "ephemeral: new Child SA created by initiator during IKE_AUTH exchange", CAT_IGNORE),
+	S(STATE_V2_IKE_AUTH_CHILD_R0, "ephemeral: new Child SA created by responder during IKE_AUTH exchange", CAT_IGNORE),
 
 	/*
 	 * CREATE_CHILD_SA exchanges.
 	 */
 
-	/* isn't this an ipsec state */
-	S(STATE_V2_NEW_CHILD_I0, "STATE_V2_NEW_CHILD_I0", CAT_ESTABLISHED_IKE_SA),
-	S(STATE_V2_NEW_CHILD_I1, "sent CREATE_CHILD_SA request for new IPsec SA", CAT_ESTABLISHED_IKE_SA, .v2.secured = true),
-	S(STATE_V2_NEW_CHILD_R0, "STATE_V2_NEW_CHILD_R0", CAT_ESTABLISHED_IKE_SA, .v2.secured = true),
-	S(STATE_V2_REKEY_CHILD_I0, "STATE_V2_REKEY_CHILD_I0", CAT_ESTABLISHED_IKE_SA),
-	S(STATE_V2_REKEY_CHILD_I1, "sent CREATE_CHILD_SA request to rekey IPsec SA", CAT_ESTABLISHED_IKE_SA, .v2.secured = true),
-	S(STATE_V2_REKEY_CHILD_R0, "STATE_V2_REKEY_CHILD_R0", CAT_ESTABLISHED_IKE_SA, .v2.secured = true),
-	S(STATE_V2_REKEY_IKE_I0, "STATE_V2_REKEY_IKE_I0", CAT_ESTABLISHED_IKE_SA),
-	S(STATE_V2_REKEY_IKE_I1, "sent CREATE_CHILD_SA request to rekey IKE SA", CAT_ESTABLISHED_IKE_SA, .v2.secured = true),
-	S(STATE_V2_REKEY_IKE_R0, "STATE_V2_REKEY_IKE_R0", CAT_ESTABLISHED_IKE_SA, .v2.secured = true),
+	S(STATE_V2_NEW_CHILD_I0, "ephemeral: new Child SA created by initiator during CREATE_CHILD_SA exchange", CAT_IGNORE),
+	S(STATE_V2_NEW_CHILD_I1, "sent CREATE_CHILD_SA request for new Child SA", CAT_IGNORE, .v2.secured = true),
+	S(STATE_V2_NEW_CHILD_R0, "ephemeral: new Child SA created by responder during CREATE_CHILD_SA exchange", CAT_IGNORE, .v2.secured = true),
+
+	S(STATE_V2_REKEY_CHILD_I0, "ephemeral: rekey Child SA created by initiator during CREATE_CHILD_SA exchange", CAT_IGNORE),
+	S(STATE_V2_REKEY_CHILD_I1, "sent CREATE_CHILD_SA request to rekey Child SA", CAT_IGNORE, .v2.secured = true),
+	S(STATE_V2_REKEY_CHILD_R0, "ephemeral: rekey Child SA created by responder during CREATE_CHILD_SA exchange", CAT_IGNORE, .v2.secured = true),
+
+	S(STATE_V2_REKEY_IKE_I0, "ephemeral: rekey IKE SA created by initiator during CREATE_CHILD_SA exchange", CAT_IGNORE),
+	S(STATE_V2_REKEY_IKE_I1, "sent CREATE_CHILD_SA request to rekey IKE SA", CAT_IGNORE, .v2.secured = true),
+	S(STATE_V2_REKEY_IKE_R0, "ephemeral: rekey IKE SA created by responder during CREATE_CHILD_SA exchange", CAT_IGNORE, .v2.secured = true),
 
 	/*
 	 * IKEv2 established states.

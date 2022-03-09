@@ -663,7 +663,7 @@ static /*const*/ struct v2_state_transition v2_state_transition_table[] = {
 	 * these are fudged).
 	 */
 
-	{ .story      = "initiate create Child SA (CREATE_CHILD_SA)",
+	{ .story      = "initiate new Child SA (CREATE_CHILD_SA)",
 	  .state      = STATE_V2_NEW_CHILD_I0,
 	  .next_state = STATE_V2_NEW_CHILD_I1,
 	  .flags      = LEMPTY,
@@ -673,7 +673,7 @@ static /*const*/ struct v2_state_transition v2_state_transition_table[] = {
 	  .llog_success = llog_v2_success_state_story,
 	  .timeout_event = EVENT_RETRANSMIT, },
 
-	{ .story      = "process create Child SA request (CREATE_CHILD_SA)",
+	{ .story      = "process new Child SA request (CREATE_CHILD_SA)",
 	  .state      = STATE_V2_NEW_CHILD_R0,
 	  .next_state = STATE_V2_ESTABLISHED_CHILD_SA,
 	  .flags      = SMF2_RELEASE_WHACK,
@@ -687,7 +687,7 @@ static /*const*/ struct v2_state_transition v2_state_transition_table[] = {
 	  .llog_success = ldbg_v2_success,
 	  .timeout_event = EVENT_v2_REPLACE, },
 
-	{ .story      = "process create Child SA response (CREATE_CHILD_SA)",
+	{ .story      = "process new Child SA response (CREATE_CHILD_SA)",
 	  .state      = STATE_V2_NEW_CHILD_I1,
 	  .next_state = STATE_V2_ESTABLISHED_CHILD_SA,
 	  .flags      = SMF2_RELEASE_WHACK,
@@ -701,7 +701,7 @@ static /*const*/ struct v2_state_transition v2_state_transition_table[] = {
 	  .llog_success = ldbg_v2_success,
 	  .timeout_event = EVENT_v2_REPLACE, },
 
-	{ .story      = "process create Child SA failure response (CREATE_CHILD_SA)",
+	{ .story      = "process new Child SA failure response (CREATE_CHILD_SA)",
 	  .state      = STATE_V2_NEW_CHILD_I1,
 	  .next_state = STATE_V2_CHILD_SA_DELETE, /* never reached */
 	  .flags      = SMF2_RELEASE_WHACK,
