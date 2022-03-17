@@ -223,9 +223,8 @@ static void emancipate_larval_ike_sa(struct ike_sa *old_ike, struct child_sa *ne
 	const struct v2_state_transition *transition = new_ike->sa.st_v2_transition;
 	pexpect(transition->state == new_ike->sa.st_state->kind);
 	pexpect(transition->next_state == STATE_V2_ESTABLISHED_IKE_SA);
-	change_v2_state(&new_ike->sa); /* should trash .st_v2_transition */
 
-	/* child is now a parent */
+	/* IKE SA is viable */
 	v2_ike_sa_established(pexpect_ike_sa(&new_ike->sa));
 
 	/* Schedule for whatever timeout is specified */
@@ -234,9 +233,10 @@ static void emancipate_larval_ike_sa(struct ike_sa *old_ike, struct child_sa *ne
 	schedule_v2_replace_event(&new_ike->sa);
 
 	/*
-	 * Announce this to the world.
+	 * Change the state, and announce this to the world.
 	 */
 	/* XXX: call transition->llog()? */
+	change_v2_state(&new_ike->sa); /* should trash .st_v2_transition */
 	llog_v2_ike_sa_established(old_ike, new_ike);
 	release_whack(new_ike->sa.logger, HERE);
 }
