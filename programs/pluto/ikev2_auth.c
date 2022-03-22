@@ -256,6 +256,58 @@ static const struct hash_desc *negotiated_hash_map[] = {
 	/* { POL_SIGHASH_IDENTITY, IKEv2_HASH_ALGORITHM_IDENTITY }, */
 };
 
+bool unpack_v2N_SIGNATURE_HASH_ALGORITHMS(struct ike_sa *ike,
+					  struct msg_digest *md)
+{
+	const struct pbs_in *payload_pbs = &md->pd[PD_v2N_SIGNATURE_HASH_ALGORITHMS]->pbs;
+	lset_t sighash_policy = ike->sa.st_connection->config->sighash_policy;
+
+	struct pbs_in pbs = *payload_pbs;
+	while (pbs_left(&pbs) > 0) {
+
+		uint16_t nh_value;
+		passert(sizeof(nh_value) == RFC_7427_HASH_ALGORITHM_IDENTIFIER_SIZE);
+		diag_t d = pbs_in_thing(&pbs, nh_value, "hash algorithm identifier (network ordered)");
+		if (d != NULL) {
+			llog_diag(RC_LOG_SERIOUS, ike->sa.logger, &d, "%s", "");
+			return false;
+		}
+		enum ikev2_hash_algorithm hash_alg_id = ntohs(nh_value);
+
+		const struct hash_desc *hash = NULL;
+		FOR_EACH_ELEMENT(h, negotiated_hash_map) {
+			if ((*h)->common.ikev2_alg_id == (int)hash_alg_id) {
+				hash = (*h);
+				break;
+			}
+		}
+
+		if (hash == NULL) {
+			enum_buf eb;
+			dbg("digsig: received and ignored unsupported hash algorithm %s",
+			    str_enum_short(&ikev2_hash_algorithm_names, hash_alg_id, &eb));
+			continue;
+		}
+
+		lset_t hash_bit = LELEM(hash_alg_id);
+		if (!(sighash_policy & hash_bit)) {
+			/* log this as config can fix it */
+			llog_sa(RC_LOG, ike, "received and ignored disabled hash algorithm %s",
+				hash->common.fqn);
+			continue;
+		}
+
+		dbg("digsig: received and accepted hash algorithm %s", hash->common.fqn);
+		ike->sa.st_v2_digsig.negotiated_hashes |= hash_bit;
+	}
+	/*
+	 * Only true when payload parsed successfully (even when
+	 * nothing was accepted).
+	 */
+	ike->sa.st_seen_hashnotify = true;
+	return true;
+}
+
 const struct hash_desc *v2_auth_negotiated_signature_hash(struct ike_sa *ike)
 {
 	dbg("digsig: selecting negotiated hash algorithm");

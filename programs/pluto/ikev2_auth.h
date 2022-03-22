@@ -40,6 +40,9 @@ struct crypt_mac v2_calculate_sighash(const struct ike_sa *ike,
 
 const struct hash_desc *v2_auth_negotiated_signature_hash(struct ike_sa *ike);
 
+bool unpack_v2N_SIGNATURE_HASH_ALGORITHMS(struct ike_sa *ike,
+					  struct msg_digest *md);
+
 shunk_t authby_asn1_hash_blob(const struct hash_desc *hash_algo,
 			      enum keyword_auth authby);
 

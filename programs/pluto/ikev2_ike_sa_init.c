@@ -1075,16 +1075,15 @@ stf_status process_v2_IKE_SA_INIT_request(struct ike_sa *ike,
 	}
 
 	if (md->pd[PD_v2N_SIGNATURE_HASH_ALGORITHMS] != NULL) {
-		if (!negotiate_hash_algo_from_notification(&md->pd[PD_v2N_SIGNATURE_HASH_ALGORITHMS]->pbs, ike)) {
+		if (!unpack_v2N_SIGNATURE_HASH_ALGORITHMS(ike, md)) {
+			/*
+			 * Return STF_FATAL which will send the
+			 * recorded message and then kill the IKE SA.
+			 * Should it instead zombify the IKE SA so
+			 * that retransmits get a response?
+			 */
 			record_v2N_response(ike->sa.logger, ike, md,
 					    v2N_INVALID_SYNTAX, NULL, UNENCRYPTED_PAYLOAD);
-			/*
-			 * STF_FATAL will send the recorded
-			 * message and then kill the IKE SA.
-			 * Should it instead zombify the IKE
-			 * SA so that retransmits get a
-			 * response?
-			 */
 			return STF_FATAL;
 		}
 		ike->sa.st_seen_hashnotify = true;
@@ -1476,7 +1475,7 @@ stf_status process_v2_IKE_SA_INIT_response(struct ike_sa *ike,
 	}
 
 	if (md->pd[PD_v2N_SIGNATURE_HASH_ALGORITHMS] != NULL) {
-		if (!negotiate_hash_algo_from_notification(&md->pd[PD_v2N_SIGNATURE_HASH_ALGORITHMS]->pbs, ike)) {
+		if (!unpack_v2N_SIGNATURE_HASH_ALGORITHMS(ike, md)) {
 			return STF_FATAL;
 		}
 		ike->sa.st_seen_hashnotify = true;
