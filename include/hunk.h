@@ -212,6 +212,12 @@ bool raw_casestarteq(const void *ptr, size_t len, const void *eat, size_t eat_le
 		raw_eq(hunk_.ptr, hunk_.len, mem_, size_);		\
 	})
 
+#define hunk_memchr(HUNK, CHAR)						\
+	({								\
+		const typeof(HUNK) hunk_ = HUNK; /* evaluate once */	\
+		memchr(hunk_.ptr, CHAR, hunk_.len);			\
+	})
+
 #define hunk_thingeq(SHUNK, THING) hunk_memeq(SHUNK, &(THING), sizeof(THING))
 
 /*
