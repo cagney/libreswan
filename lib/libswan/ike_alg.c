@@ -1210,21 +1210,28 @@ static const char *backend_name(const struct ike_alg *alg)
 	return NULL;
 }
 
-static void jam_ike_alg_details(struct jambuf *buf, size_t name_width,
-				size_t backend_width, const struct ike_alg *alg)
+struct column_widths {
+	size_t name;
+	size_t backend;
+	size_t operations;
+};
+
+static void jam_ike_alg_details(struct jambuf *buf,
+				struct column_widths width,
+				const struct ike_alg *alg)
 {
 	/*
 	 * NAME [{256,192,*128}]:
 	 */
-	name_width -= jam_string(buf, alg->fqn);
+	width.name -= jam_string(buf, alg->fqn);
 	/*
 	 * Concatenate [key,...] or {key,...} with default
 	 * marked with '*'.
 	 */
 	if (alg->type == &ike_alg_encrypt) {
 #define MAX_KEYSIZES (int)strlen("{256,192,*128}")
-		name_width -= MAX_KEYSIZES;
-		jam(buf, "%*s", (int) name_width, "");
+		width.name -= MAX_KEYSIZES;
+		jam(buf, "%*s", (int) width.name, "");
 		const struct encrypt_desc *encr = encrypt_desc(alg);
 		int s = 0;
 		s += jam_string(buf, encr->keylen_omitted ? "[" : "{");
@@ -1240,7 +1247,7 @@ static void jam_ike_alg_details(struct jambuf *buf, size_t name_width,
 		s += jam(buf, encr->keylen_omitted ? "]" : "}");
 		jam(buf, "%*s", MAX_KEYSIZES - s, "");
 	} else {
-		jam(buf, "%*s", (int) name_width, "");
+		jam(buf, "%*s", (int) width.name, "");
 	}
 	jam_string(buf, " ");
 
@@ -1308,13 +1315,19 @@ static void jam_ike_alg_details(struct jambuf *buf, size_t name_width,
 	jam_string(buf, (alg->fips.approved
 			 ? "  FIPS"
 			 : "      "));
+	if (width.operations > 0) {
+		humber_buf ob;
+		jam(buf, " %*s", (int) width.operations,
+		    (alg->fips.operation_limit > 0 ? str_humber(alg->fips.operation_limit, &ob) : ""));
+	}
 
 	/*
 	 * Concatenate:   XXX backend
 	 */
-	if (backend_width > 0) {
+	if (width.backend > 0) {
 		const char *b = backend_name(alg);
-		jam(buf, " %-*s", (int) backend_width, b != NULL ? b : "");
+		jam(buf, " %-*s", (int) width.backend,
+		    (b != NULL ? b : ""));
 	}
 
 	/*
@@ -1338,20 +1351,25 @@ static void log_ike_algs(struct logger *logger)
 	 * Find a suitable column width by looking for the longest
 	 * name.
 	 */
-	size_t name_width = 0;
-	size_t backend_width = 0;
+	struct column_widths width = {0};
 	FOR_EACH_IKE_ALG_TYPEP(typep) {
 		const struct ike_alg_type *type = *typep;
 		FOR_EACH_IKE_ALGP(type, algp) {
-			size_t s = strlen((*algp)->fqn);
-			if ((*algp)->type == &ike_alg_encrypt) {
+			const struct ike_alg *alg = (*algp);
+			size_t s = strlen(alg->fqn);
+			if (alg->type == IKE_ALG_ENCRYPT) {
 				s += MAX_KEYSIZES + 1;
 			}
-			name_width = max(s, name_width);
-			const char *b = backend_name(*algp);
+			width.name = max(s, width.name);
+			const char *b = backend_name(alg);
 			if (b != NULL) {
 				size_t s = strlen(b);
-				backend_width = max(s, backend_width);
+				width.backend = max(s, width.backend);
+			}
+			if (alg->fips.operation_limit > 0) {
+				humber_buf ob;
+				size_t w = strlen(str_humber(alg->fips.operation_limit, &ob));
+				width.operations = max(w, width.operations);
 			}
 		}
 	}
@@ -1368,7 +1386,7 @@ static void log_ike_algs(struct logger *logger)
 		FOR_EACH_IKE_ALGP(type, algp) {
 			LLOG_JAMBUF(RC_LOG, logger, buf) {
 				jam_string(buf, "  ");
-				jam_ike_alg_details(buf, name_width, backend_width, *algp);
+				jam_ike_alg_details(buf, width, *algp);
 			}
 		}
 	}
