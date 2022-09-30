@@ -68,13 +68,11 @@ typedef struct {
 	 * expects to see on its incoming packets?
 	 */
 	ipsec_spi_t spi;
-#if 0
 	/*
 	 * The "port" which might actually be some sort of ICMP
 	 * encoding.  Determined by ipproto.
 	 */
 	int hport;
-#endif
 } ip_said;
 
 extern const ip_said unset_said;
@@ -89,15 +87,17 @@ extern const ip_said unset_said;
 ip_said said_from_raw(where_t where, const struct ip_info *afi,
 		      const struct ip_bytes bytes,
 		      const struct ip_protocol *protocol,
-		      /*ip_port port,*/
+		      ip_port port,
 		      ipsec_spi_t spi);
-
-ip_said said_from_endpoint_spi(const ip_endpoint endpoint,
-			       const ipsec_spi_t spi/*network-byte-ordered*/);
 
 ip_said said_from_address_protocol_spi(const ip_address address,
 				       const struct ip_protocol *proto,
 				       ipsec_spi_t spi/*network-byte-order*/);
+
+ip_said said_from_address_protocol_port_spi(const ip_address address,
+					    const struct ip_protocol *protocol,
+					    ip_port port,
+					    ipsec_spi_t spi/*network-byte-order*/);
 
 /*
  * Formatting
