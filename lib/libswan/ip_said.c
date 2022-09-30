@@ -26,6 +26,7 @@ ip_said said_from_raw(where_t where UNUSED,
 		      const struct ip_info *afi,
 		      const struct ip_bytes dst,
 		      const struct ip_protocol *protocol,
+		      ip_port port,
 		      ipsec_spi_t spi)
 {
 	ip_said said = {
@@ -34,6 +35,7 @@ ip_said said_from_raw(where_t where UNUSED,
 		.dst = dst,
 		.ipproto = protocol->ipproto,
 		.spi = spi,
+		.hport = port.hport,
 	};
 	return said;
 
@@ -50,7 +52,22 @@ ip_said said_from_address_protocol_spi(const ip_address address,
 	}
 
 	return said_from_raw(HERE, afi, address.bytes,
-			     protocol, spi);
+			     protocol, unset_port, spi);
+}
+
+ip_said said_from_address_protocol_port_spi(const ip_address address,
+					    const struct ip_protocol *protocol,
+					    ip_port port,
+					    ipsec_spi_t spi)
+{
+	const struct ip_info *afi = address_info(address);
+	if (afi == NULL) {
+		/* NULL+unset+unknown */
+		return unset_said;
+	}
+
+	return said_from_raw(HERE, afi, address.bytes,
+			     protocol, port, spi);
 }
 
 bool said_is_unset(const ip_said *said)
