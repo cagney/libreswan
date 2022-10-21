@@ -661,8 +661,12 @@ static struct hash_signature RSA_sign_hash_rsassa_pss(const struct secret_stuff 
 		.data = (void*)mech, /* strip const */
 		.len = sizeof(*mech),
 	};
+#if 0
+	SGN_DigestDirect(); github/818
+#else
 	SECStatus s = PK11_SignWithMechanism(pks->u.pubkey.private_key, CKM_RSA_PKCS_PSS,
 					     &mech_item, &signature, &data);
+#endif
 	if (s != SECSuccess) {
 		/* PR_GetError() returns the thread-local error */
 		llog_nss_error(RC_LOG_SERIOUS, logger,
@@ -677,18 +681,11 @@ static struct hash_signature RSA_sign_hash_rsassa_pss(const struct secret_stuff 
 static bool RSA_authenticate_signature_rsassa_pss(const struct crypt_mac *expected_hash,
 						  shunk_t signature,
 						  struct pubkey *pubkey,
-						  const struct hash_desc *hash_algo,
+						  const struct hash_desc *hash_alg,
 						  diag_t *fatal_diag,
 						  struct logger *logger)
 {
 	SECKEYPublicKey *seckey_public = pubkey->content.public_key;
-
-	/* decrypt the signature -- reversing RSA_sign_hash */
-	if (signature.len != (size_t)seckey_public->u.rsa.modulus.len) {
-		/* XXX notification: INVALID_KEY_INFORMATION */
-		*fatal_diag = NULL;
-		return false;
-	}
 
 	if (DBGP(DBG_BASE)) {
 		DBG_dump_hunk("NSS RSA: verifying that decrypted signature matches hash: ",
@@ -699,41 +696,26 @@ static bool RSA_authenticate_signature_rsassa_pss(const struct crypt_mac *expect
 	 * Convert the signature into raw form (NSS doesn't do const).
 	 */
 
-	const SECItem encrypted_signature = {
+	const SECItem signature_item = {
 		.type = siBuffer,
 		.data = DISCARD_CONST(unsigned char *, signature.ptr),
 		.len  = signature.len,
 	};
 
-	/*
-	 * Digital signature scheme with RSA-PSS
-	 */
-	const CK_RSA_PKCS_PSS_PARAMS *mech = hash_algo->nss.rsa_pkcs_pss_params;
-	if (!pexpect(mech != NULL)) {
-		dbg("NSS RSA verify: hash algorithm not supported");
-		/* internal error? */
-		*fatal_diag = NULL;
-		return false;
-	}
-
-	const SECItem hash_mech_item = {
-		.type = siBuffer,
-		.data = (void*)mech, /* strip const */
-		.len = sizeof(*mech),
-	};
-
-	struct crypt_mac hash_data = *expected_hash; /* cast away const */
 	const SECItem expected_hash_item = {
-		.len = hash_data.len,
-		.data = hash_data.ptr,
 		.type = siBuffer,
+		.len = expected_hash->len,
+		.data = DISCARD_CONST(uint8_t *, expected_hash->ptr),/*NSS doesn't do const*/
 	};
 
-	if (PK11_VerifyWithMechanism(seckey_public, CKM_RSA_PKCS_PSS,
-				     &hash_mech_item, &encrypted_signature,
-				     &expected_hash_item,
-				     lsw_nss_get_password_context(logger)) != SECSuccess) {
-		dbg("NSS RSA verify: decrypting signature is failed");
+	if (VFY_VerifyDigestDirect(&expected_hash_item, seckey_public, &signature_item,
+				   CKM_RSA_PKCS_PSS, hash_alg->nss.oid_tag,
+				   lsw_nss_get_password_context(logger)) != SECSuccess) {
+		if (DBGP(DBG_BASE)) {
+			llog_nss_error(DEBUG_STREAM, logger,
+				       "verifying AUTH hash using VFY_VerifyDigestDirect(CKM_RSA_PKCS_PSS, %s,%s) failed",
+				       pubkey->content.type->name, hash_alg->common.fqn);
+		}
 		*fatal_diag = NULL;
 		return false;
 	}
