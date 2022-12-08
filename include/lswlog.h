@@ -281,6 +281,62 @@ void llog_errno(lset_t rc_flags, const struct logger *logger, int error,
 		const char *message, ...) PRINTF_LIKE(4);
 
 /*
+ * Report serious and fatal errors.
+ *
+ * Message format is:
+ *
+ *   "ERROR: " <log-prefix> <message...>
+ *   "ERROR: " <log-prefix> <message...> ": " <strerr> " (" <errno> ")"
+ *
+ *   "FATAL ERROR: " <log-prefix> <message...>
+ *   "FATAL ERROR: " <log-prefix> <message...> ": " <strerr> " (" <errno> ")"
+ *
+ * and not:
+ *
+ *   <log-prefix>ERROR: <message...>...
+ *   <log-prefix>ERROR: <message...>...
+ *
+ * i.e., "ERROR: " goes right at the front making it easier to spot.
+ *
+ * llog_perror(), like perror(), appends ": " followed by the error
+ * string.  And the log-level is RC_LOG_SERIOUS + ERROR level?
+ */
+
+#if 0
+PRINTF_LIKE(2)
+void llog_error(struct logger *logger, const char *message, ...);
+#endif
+
+#if 0
+PRINTF_LIKE(3)
+void llog_perror(struct logger *logger, int error, const char *message, ...);
+#endif
+
+#if 0
+PRINTF_LIKE(3) NEVER_RETURNS
+void fatal_error(enum pluto_exit_code rc, const struct logger *logger,
+		 const char *message, ...);
+#endif
+
+#if 0
+PRINTF_LIKE(4) NEVER_RETURNS
+void fatal_perror(enum pluto_exit_code rc, const struct logger *logger,
+		  int error, const char *message, ...);
+#endif
+
+/*
+ * Similar to log_perror() but no "ERROR: " prefix and no ": " suffix,
+ * and any log level et.al.
+ */
+
+#if 0
+PRINTF_LIKE(4)
+void llog_errno(lset_t rc_flags, const struct logger *logger, int error,
+		const char *message, ...);
+#endif
+
+
+/*
  * Log debug messages to the main log stream, but not the WHACK log
  * stream.
  *
