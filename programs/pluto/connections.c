@@ -3240,6 +3240,15 @@ static diag_t extract_connection(const struct whack_message *wm,
 		return diag("both left and right define virtual subnets");
 	}
 
+	/*
+	 * For instance auto=ondemand narrowing=yes; exception is
+	 * group (but that isn't a template).
+	 */
+	if ((c->end[LEFT_END].kind == CK_TEMPLATE || c->end[RIGHT_END].kind == CK_TEMPLATE) &&
+	    wm->autostart == AUTOSTART_ONDEMAND) {
+		return diag("template connection cannot be auto=ondemand");
+	}
+
 	if ((c->end[LEFT_END].kind == CK_GROUP || c->end[RIGHT_END].kind == CK_GROUP) &&
 	    (wm->left.virt != NULL || wm->right.virt != NULL)) {
 		return diag("connection groups do not support virtual subnets");
