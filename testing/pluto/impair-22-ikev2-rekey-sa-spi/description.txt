@@ -1,0 +1,1 @@
+Test rekey of child with bogus REKEY_SA Protocol ID

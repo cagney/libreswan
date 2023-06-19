@@ -1,0 +1,181 @@
+/testing/guestbin/swan-prep
+west #
+ # make sure that clear text does not get through
+west #
+ iptables -A INPUT -i eth1 -s 192.0.2.0/24 -j DROP
+west #
+ iptables -I INPUT -m policy --dir in --pol ipsec -j ACCEPT
+west #
+ ipsec start
+Redirecting to: [initsystem]
+west #
+ ../../guestbin/wait-until-pluto-started
+west #
+ ipsec auto --add west
+002 "west": added IKEv2 connection
+west #
+ echo "initdone"
+initdone
+west #
+ ipsec whack --impair revival --impair emitting
+west #
+ # bring up west and confirm
+west #
+ ipsec auto --up west
+1v2 "west" #1: initiating IKEv2 connection
+1v2 "west" #1: sent IKE_SA_INIT request to 192.1.2.23:500
+1v2 "west" #1: sent IKE_AUTH request {cipher=AES_GCM_16_256 integ=n/a prf=HMAC_SHA2_512 group=MODP2048}
+003 "west" #1: initiator established IKE SA; authenticated peer using authby=secret and ID_FQDN '@east'
+004 "west" #2: initiator established Child SA using #1; IPsec tunnel [192.0.1.0-192.0.1.255:0-65535 0] -> [192.0.2.0-192.0.2.255:0-65535 0] {ESP/ESN=>0xESPESP <0xESPESP xfrm=AES_GCM_16_256-NONE DPD=passive}
+west #
+ ../../guestbin/ping-once.sh --up -I 192.0.1.254 192.0.2.254
+up
+west #
+ ipsec whack --trafficstatus
+006 #2: "west", type=ESP, add_time=1234567890, inBytes=84, outBytes=84, maxBytes=2^63B, id='@east'
+west #
+ ipsec whack --rekey-ipsec --name west
+002 "west" #3: initiating rekey to replace Child SA #2
+1v2 "west" #3: sent CREATE_CHILD_SA request to rekey IPsec SA
+004 "west" #3: initiator rekeyed Child SA #2 using #1; IPsec tunnel [192.0.1.0-192.0.1.255:0-65535 0] -> [192.0.2.0-192.0.2.255:0-65535 0] {ESP/ESN=>0xESPESP <0xESPESP xfrm=AES_GCM_16_256-NONE-MODP2048 DPD=passive}
+002 "west" #2: deleting established Child SA using IKE SA #1
+005 "west" #2: ESP traffic information: in=84B out=84B
+west #
+ ipsec auto --down west
+002 "west": terminating SAs using this connection
+002 "west" #1: deleting IKE SA (ESTABLISHED_IKE_SA) and sending notification
+005 "west" #3: ESP traffic information: in=0B out=0B
+west #
+ # bogus empty SPI
+west #
+ ipsec auto --up west
+1v2 "west" #4: initiating IKEv2 connection
+1v2 "west" #4: sent IKE_SA_INIT request to 192.1.2.23:500
+1v2 "west" #4: sent IKE_AUTH request {cipher=AES_GCM_16_256 integ=n/a prf=HMAC_SHA2_512 group=MODP2048}
+003 "west" #4: initiator established IKE SA; authenticated peer using authby=secret and ID_FQDN '@east'
+004 "west" #5: initiator established Child SA using #4; IPsec tunnel [192.0.1.0-192.0.1.255:0-65535 0] -> [192.0.2.0-192.0.2.255:0-65535 0] {ESP/ESN=>0xESPESP <0xESPESP xfrm=AES_GCM_16_256-NONE DPD=passive}
+west #
+ ../../guestbin/ping-once.sh --up -I 192.0.1.254 192.0.2.254
+up
+west #
+ ipsec whack --trafficstatus
+006 #5: "west", type=ESP, add_time=1234567890, inBytes=84, outBytes=84, maxBytes=2^63B, id='@east'
+west #
+ ipsec whack --impair v2n_rekey_sa_spi_size:0  --impair v2n_rekey_sa_body:no
+west #
+ ipsec whack --rekey-ipsec --name west
+002 "west" #6: initiating rekey to replace Child SA #5
+002 "west" #5: IMPAIR: changing REKEY_SA SPI SPISPI from 4 to 0
+1v2 "west" #6: sent CREATE_CHILD_SA request to rekey IPsec SA
+003 "west" #6: CREATE_CHILD_SA failed with error notification INVALID_SYNTAX
+036 "west" #4: encountered fatal error in state STATE_V2_ESTABLISHED_IKE_SA
+002 "west" #5: IMPAIR: revival: skip scheduling revival event
+005 "west" #5: ESP traffic information: in=84B out=84B
+002 "west" #4: deleting IKE SA (ESTABLISHED_IKE_SA) and NOT sending notification
+west #
+ ipsec whack --impair v2n_rekey_sa_spi_size:no --impair v2n_rekey_sa_body:no
+west #
+ ipsec auto --down west
+002 "west": terminating SAs using this connection
+west #
+ # bogus empty SPI
+west #
+ ipsec auto --up west
+1v2 "west" #7: initiating IKEv2 connection
+1v2 "west" #7: sent IKE_SA_INIT request to 192.1.2.23:500
+1v2 "west" #7: sent IKE_AUTH request {cipher=AES_GCM_16_256 integ=n/a prf=HMAC_SHA2_512 group=MODP2048}
+003 "west" #7: initiator established IKE SA; authenticated peer using authby=secret and ID_FQDN '@east'
+004 "west" #8: initiator established Child SA using #7; IPsec tunnel [192.0.1.0-192.0.1.255:0-65535 0] -> [192.0.2.0-192.0.2.255:0-65535 0] {ESP/ESN=>0xESPESP <0xESPESP xfrm=AES_GCM_16_256-NONE DPD=passive}
+west #
+ ../../guestbin/ping-once.sh --up -I 192.0.1.254 192.0.2.254
+up
+west #
+ ipsec whack --trafficstatus
+006 #8: "west", type=ESP, add_time=1234567890, inBytes=84, outBytes=84, maxBytes=2^63B, id='@east'
+west #
+ ipsec whack --impair v2n_rekey_sa_spi_size:0  --impair v2n_rekey_sa_body:0
+west #
+ ipsec whack --rekey-ipsec --name west
+002 "west" #9: initiating rekey to replace Child SA #8
+002 "west" #8: IMPAIR: changing REKEY_SA SPI SPISPI from 4 to 0
+002 "west" #8: IMPAIR: emitting 0 zero bytes as the REKEY_SA body
+1v2 "west" #9: sent CREATE_CHILD_SA request to rekey IPsec SA
+003 "west" #9: CREATE_CHILD_SA failed with error notification INVALID_SYNTAX
+036 "west" #7: encountered fatal error in state STATE_V2_ESTABLISHED_IKE_SA
+002 "west" #8: IMPAIR: revival: skip scheduling revival event
+005 "west" #8: ESP traffic information: in=84B out=84B
+002 "west" #7: deleting IKE SA (ESTABLISHED_IKE_SA) and NOT sending notification
+west #
+ ipsec whack --impair v2n_rekey_sa_spi_size:no --impair v2n_rekey_sa_body:no
+west #
+ ipsec auto --down west
+002 "west": terminating SAs using this connection
+west #
+ # bogus huge SPI
+west #
+ ipsec auto --up west
+1v2 "west" #10: initiating IKEv2 connection
+1v2 "west" #10: sent IKE_SA_INIT request to 192.1.2.23:500
+1v2 "west" #10: sent IKE_AUTH request {cipher=AES_GCM_16_256 integ=n/a prf=HMAC_SHA2_512 group=MODP2048}
+003 "west" #10: initiator established IKE SA; authenticated peer using authby=secret and ID_FQDN '@east'
+004 "west" #11: initiator established Child SA using #10; IPsec tunnel [192.0.1.0-192.0.1.255:0-65535 0] -> [192.0.2.0-192.0.2.255:0-65535 0] {ESP/ESN=>0xESPESP <0xESPESP xfrm=AES_GCM_16_256-NONE DPD=passive}
+west #
+ ../../guestbin/ping-once.sh --up -I 192.0.1.254 192.0.2.254
+up
+west #
+ ipsec whack --trafficstatus
+006 #11: "west", type=ESP, add_time=1234567890, inBytes=84, outBytes=84, maxBytes=2^63B, id='@east'
+west #
+ ipsec whack --impair v2n_rekey_sa_spi_size:254 --impair v2n_rekey_sa_body:no
+west #
+ ipsec whack --rekey-ipsec --name west
+002 "west" #12: initiating rekey to replace Child SA #11
+002 "west" #11: IMPAIR: changing REKEY_SA SPI SPISPI from 4 to 254
+1v2 "west" #12: sent CREATE_CHILD_SA request to rekey IPsec SA
+003 "west" #12: CREATE_CHILD_SA failed with error notification INVALID_SYNTAX
+036 "west" #10: encountered fatal error in state STATE_V2_ESTABLISHED_IKE_SA
+002 "west" #11: IMPAIR: revival: skip scheduling revival event
+005 "west" #11: ESP traffic information: in=84B out=84B
+002 "west" #10: deleting IKE SA (ESTABLISHED_IKE_SA) and NOT sending notification
+west #
+ ipsec whack --impair v2n_rekey_sa_spi_size:no  --impair v2n_rekey_sa_body:no
+west #
+ ipsec auto --down west
+002 "west": terminating SAs using this connection
+west #
+ # bogus truely huge SPI
+west #
+ ipsec auto --up west
+1v2 "west" #13: initiating IKEv2 connection
+1v2 "west" #13: sent IKE_SA_INIT request to 192.1.2.23:500
+1v2 "west" #13: sent IKE_AUTH request {cipher=AES_GCM_16_256 integ=n/a prf=HMAC_SHA2_512 group=MODP2048}
+003 "west" #13: initiator established IKE SA; authenticated peer using authby=secret and ID_FQDN '@east'
+004 "west" #14: initiator established Child SA using #13; IPsec tunnel [192.0.1.0-192.0.1.255:0-65535 0] -> [192.0.2.0-192.0.2.255:0-65535 0] {ESP/ESN=>0xESPESP <0xESPESP xfrm=AES_GCM_16_256-NONE DPD=passive}
+west #
+ ../../guestbin/ping-once.sh --up -I 192.0.1.254 192.0.2.254
+up
+west #
+ ipsec whack --trafficstatus
+006 #14: "west", type=ESP, add_time=1234567890, inBytes=84, outBytes=84, maxBytes=2^63B, id='@east'
+west #
+ ipsec whack --impair v2n_rekey_sa_spi_size:254 --impair v2n_rekey_sa_body:60000
+west #
+ ipsec whack --rekey-ipsec --name west
+002 "west" #15: initiating rekey to replace Child SA #14
+002 "west" #14: IMPAIR: changing REKEY_SA SPI SPISPI from 4 to 254
+002 "west" #14: IMPAIR: emitting 60000 zero bytes as the REKEY_SA body
+1v2 "west" #15: sent CREATE_CHILD_SA request to rekey IPsec SA
+003 "west" #15: CREATE_CHILD_SA failed with error notification INVALID_SYNTAX
+036 "west" #13: encountered fatal error in state STATE_V2_ESTABLISHED_IKE_SA
+002 "west" #14: IMPAIR: revival: skip scheduling revival event
+005 "west" #14: ESP traffic information: in=84B out=84B
+002 "west" #13: deleting IKE SA (ESTABLISHED_IKE_SA) and NOT sending notification
+west #
+ ipsec whack --impair v2n_rekey_sa_spi_size:no  --impair v2n_rekey_sa_body:no
+west #
+ ipsec auto --down west
+002 "west": terminating SAs using this connection
+west #
+ ipsec whack --trafficstatus
+west #
+ 
