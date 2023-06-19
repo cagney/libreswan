@@ -2638,17 +2638,13 @@ static bool pbs_out_number(struct pbs_out *outs, struct_desc *sd,
 		name_buf b;
 		if (fp->field_type == ft_af_enum &&
 		    !enum_long(fp->desc, n, &b)) {
-#define MSG "%s of %s has an unknown value: 0x%x+%" PRIu32 " (0x%" PRIx32 ")", \
-				fp->name,				\
-				sd->name,				\
-				n & ISAKMP_ATTR_AF_MASK,		\
-				n & ~ISAKMP_ATTR_AF_MASK,		\
-				n
+			barf((impair.emitting ? IMPAIR_FLAGS : PEXPECT_FLAGS),
+			      outs->logger, 0, HERE,
+			     "%s of %s has an unknown value: 0x%x+%" PRIu32 " (0x%" PRIx32 ")",
+			     fp->name, sd->name, n & ISAKMP_ATTR_AF_MASK, n & ~ISAKMP_ATTR_AF_MASK, n);
 			if (!impair.emitting) {
-				llog_pexpect(outs->logger, HERE, MSG);
 				return false;
 			}
-			llog(IMPAIR_STREAM, outs->logger, "emitting "MSG);
 		}
 		break;
 	}
@@ -2657,16 +2653,14 @@ static bool pbs_out_number(struct pbs_out *outs, struct_desc *sd,
 	{
 		name_buf b;
 		if (!enum_long(fp->desc, n, &b)) {
+			barf((impair.emitting ? IMPAIR_FLAGS : PEXPECT_FLAGS),
+			      outs->logger, 0, HERE,
+			      "%s of %s has an unknown value: %" PRIu32 " (0x%" PRIx32 ")",
+			      fp->name, sd->name,
+			      n, n);
 			if (!impair.emitting) {
-				llog_pexpect(outs->logger, HERE,
-					     "%s of %s has an unknown value: %" PRIu32 " (0x%" PRIx32 ")",
-					     fp->name, sd->name,
-					     n, n);
 				return false;
 			}
-			llog(IMPAIR_STREAM, outs->logger,
-			     "%s of %s has an unknown value: %" PRIu32 " (0x%" PRIx32 ")",
-			     fp->name, sd->name, n, n);
 		}
 		break;
 	}
@@ -2679,21 +2673,15 @@ static bool pbs_out_number(struct pbs_out *outs, struct_desc *sd,
 
 	case ft_lset:           /* bits representing set */
 		if (!test_lset(fp->desc, n)) {
-			if (!impair.emitting) {
-				lset_buf lb;
-				llog_pexpect(outs->logger, HERE,
-					     "bitset %s of %s has unknown member(s): %s (0x%" PRIx32 ")",
-					     fp->name, sd->name,
-					     str_lset(fp->desc, n, &lb),
-					     n);
-				return false;
-			}
 			lset_buf lb;
-			llog(IMPAIR_STREAM, outs->logger,
+			barf((impair.emitting ? IMPAIR_FLAGS : PEXPECT_FLAGS),
+			     outs->logger, 0, HERE,
 			     "bitset %s of %s has unknown member(s): %s (0x%" PRIx32 ")",
 			     fp->name, sd->name,
-			     str_lset(fp->desc, n, &lb),
-			     n);
+			     str_lset(fp->desc, n, &lb), n);
+			if (impair.emitting) {
+				return false;
+			}
 		}
 		break;
 
