@@ -102,6 +102,7 @@ void jambuf_to_logger(struct jambuf *buf, const struct logger *logger UNUSED, en
 	case DEBUG_STREAM:
 	case ERROR_STREAM:
 	case PEXPECT_STREAM:
+	case IMPAIR_STREAM:
 		fprintf(stderr, "%s\n", buf->array);
 		return;
 	case PASSERT_STREAM:

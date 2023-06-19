@@ -337,6 +337,7 @@ void jambuf_to_logger(struct jambuf *buf, const struct logger *logger, enum stre
 		return;
 	case ERROR_STREAM:
 	case FATAL_STREAM:
+	case IMPAIR_STREAM:
 		log_raw(LOG_ERR, "", buf);
 		log_whacks(0, logger, buf);
 		return;

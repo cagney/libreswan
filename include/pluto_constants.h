@@ -993,6 +993,7 @@ enum stream {
 	PASSERT_STREAM     = 0x0600000, /*   ERR     yes    err    "ABORT: ASSERTION_FAILED: " <prefix> */
 	FATAL_STREAM       = 0x0700000, /*   ERR     yes    err    "FATAL ERROR: " <prefix> */
 	PRINTF_STREAM      = 0x0800000, /*   N/A    stdout stdout  */
+	IMPAIR_STREAM      = 0x0900000, /* WARNING   yes    err    IMPAIR: <prefix> */
 	NO_STREAM          = 0x0f00000, /*   N/A     N/A                 */
 	/*
 	 * <o>: add prefix when object is available

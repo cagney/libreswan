@@ -56,6 +56,9 @@ void jam_stream_prefix(struct jambuf *buf, const struct logger *logger, enum str
 		jam_string(buf, FATAL_PREFIX);
 		jam_logger_prefix(buf, logger);
 		return;
+	case IMPAIR_STREAM:
+		jam_string(buf, IMPAIR_PREFIX);
+		return;
 	case ERROR_STREAM:
 	case RC_LOG:
 	case ALL_STREAMS:

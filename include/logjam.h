@@ -37,6 +37,7 @@ enum stream;
 #define PEXPECT_PREFIX		"EXPECTATION FAILED: "
 #define PASSERT_PREFIX		"FATAL: ASSERTION FAILED: "
 #define FATAL_PREFIX		"FATAL ERROR: "
+#define IMPAIR_PREFIX  		"IMPAIR: "
 /*#define PRINTF_PREFIX		""*/
 
 struct logjam {
