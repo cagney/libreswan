@@ -31,6 +31,7 @@ struct iface_endpoint;
 struct show;
 struct iface;
 struct logger;
+enum xfrmi_mark;
 
 struct iface_packet {
 	ssize_t len;
@@ -51,6 +52,7 @@ struct iface_io {
 	ssize_t (*write_packet)(const struct iface_endpoint *ifp,
 				shunk_t packet,
 				const ip_endpoint *remote_endpoint,
+				enum xfrmi_mark mark_out,
 				struct logger *logger);
 	void (*cleanup)(struct iface_endpoint *ifp);
 	void (*listen)(struct iface_endpoint *fip, struct logger *logger);
@@ -97,6 +99,9 @@ struct iface_endpoint {
 	struct iface *ip_dev;
 	const struct iface_io *io;
 	ip_endpoint local_endpoint;	/* interface IP address:port */
+#ifdef USE_XFRM_INTERFACE
+	uint32_t mark_out;
+#endif
 	int fd;                 /* file descriptor of socket for IKE UDP messages */
 	struct iface_endpoint *next;
 	struct list_entry entry;

@@ -425,4 +425,10 @@ void setup_esp_nic_offload(struct nic_offload *nic_offload,
 struct spd_owner spd_owner(const struct spd_route *spd, enum routing new_routing,
 			   struct logger *logger, where_t where);
 
+enum xfrmi_mark {
+	UNSET_XFRMI_MARK = 0, /*just use 0*/
+};
+
+enum xfrmi_mark get_mark_out(const struct connection *c);
+
 #endif

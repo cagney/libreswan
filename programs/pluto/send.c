@@ -43,6 +43,7 @@
 #include "ip_protocol.h"
 #include "iface.h"
 #include "impair_message.h"
+#include "kernel.h"		/* for get_mark_out() */
 
 /* send_ike_msg logic is broken into layers.
  * The rest of the system thinks it is simple.
@@ -70,6 +71,7 @@ static bool send_shunks(const char *where, bool just_a_keepalive,
 			so_serial_t serialno, /* can be SOS_NOBODY */
 			const struct iface_endpoint *interface,
 			ip_endpoint remote_endpoint,
+			enum xfrmi_mark mark_out,
 			shunk_t a, shunk_t b,
 			struct logger *logger)
 {
@@ -174,7 +176,9 @@ static bool send_shunks(const char *where, bool just_a_keepalive,
 
 	if (!impair_outbound(interface, packet, &remote_endpoint, logger)) {
 		ssize_t wlen = interface->io->write_packet(interface, packet,
-							   &remote_endpoint, logger);
+							   &remote_endpoint,
+							   mark_out,
+							   logger);
 		if (wlen != (ssize_t)len) {
 			if (!just_a_keepalive) {
 				endpoint_buf lb;
@@ -229,7 +233,7 @@ static bool send_shunks(const char *where, bool just_a_keepalive,
 bool send_pbs_out_using_md(struct msg_digest *md, const char *where, struct pbs_out *packet)
 {
 	return send_shunks(where, false, SOS_NOBODY,
-			   md->iface, md->sender,
+			   md->iface, md->sender, UNSET_XFRMI_MARK,
 			   pbs_out_all(packet), null_shunk,
 			   md->logger);
 }
@@ -239,6 +243,7 @@ bool send_shunks_using_state(struct state *st, const char *where,
 {
 	return send_shunks(where, false, st->st_serialno,
 			   st->st_iface_endpoint, st->st_remote_endpoint,
+			   get_mark_out(st->st_connection),
 			   shunk_a, shunk_b,
 			   st->logger);
 }
@@ -265,6 +270,7 @@ bool send_keepalive_using_state(struct state *st, const char *where)
 
 	return send_shunks(where, true, st->st_serialno, st->st_iface_endpoint,
 			   st->st_remote_endpoint,
+			   get_mark_out(st->st_connection),
 			   THING_AS_SHUNK(ka_payload), null_shunk,
 			   st->logger);
 }

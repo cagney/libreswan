@@ -39,6 +39,9 @@
 #include "demux.h"	/* for struct msg_digest */
 #include "rnd.h"
 #include "kernel.h"	/* for get_my_cpi() */
+#if USE_XFRM_INTERFACE
+#include "kernel_xfrm_interface.h"
+#endif
 
 #ifdef USE_XFRM_INTERFACE
 #include "kernel_xfrm_interface.h"	/* for set_ike_mark_out() */
@@ -53,10 +56,6 @@ bool send_recorded_v2_message(struct ike_sa *ike,
 		llog_sa(RC_LOG, ike, "cannot send packet - interface vanished!");
 		return false;
 	}
-
-#ifdef USE_XFRM_INTERFACE
-	set_ike_mark_out(ike->sa.st_connection, &ike->sa.st_remote_endpoint);
-#endif
 
 	if (frags == NULL) {
 		llog_sa(RC_LOG, ike, "no %s message to send", where);

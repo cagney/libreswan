@@ -29,6 +29,7 @@
 #include "impair_message.h"
 #include "state.h"
 #include "iface.h"
+#include "kernel.h"		/* for UNSET_XFRMI_MARK */
 
 struct message;
 struct direction_impairment;
@@ -362,6 +363,7 @@ static void drip_outbound(const struct message *m, struct logger *logger)
 	ssize_t wlen = interface->io->write_packet(interface,
 						   HUNK_AS_SHUNK(m->body),
 						   &m->outbound.endpoint,
+						   UNSET_XFRMI_MARK,
 						   logger);
 	if (wlen != (ssize_t)m->body.len) {
 		endpoint_buf lb;

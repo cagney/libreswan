@@ -2623,3 +2623,24 @@ void shutdown_kernel(struct logger *logger)
 		kernel_ops->shutdown(logger);
 	}
 }
+
+enum xfrmi_mark get_mark_out(const struct connection *c)
+{
+	const struct spds *spds = &c->child.spds;
+
+	if (c->xfrmi == NULL || c->xfrmi->if_id == 0) {
+		return UNSET_XFRMI_MARK;
+	}
+
+	FOR_EACH_ITEM(spd, spds) {
+		if (address_in_selector_range(c->remote->host.addr, spd->remote->client)) {
+			if (c->sa_marks.out.val != 0) {
+				return c->sa_marks.out.val;
+			} else {
+				return c->xfrmi->if_id;
+			}
+		}
+	}
+
+	return UNSET_XFRMI_MARK;
+}

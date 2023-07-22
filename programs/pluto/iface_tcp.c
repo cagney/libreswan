@@ -360,6 +360,7 @@ static struct msg_digest *iketcp_read_packet(struct iface_endpoint **ifp,
 static ssize_t iketcp_write_packet(const struct iface_endpoint *ifp,
 				   shunk_t packet,
 				   const ip_endpoint *remote_endpoint UNUSED,
+				   enum xfrmi_mark mark_out UNUSED,
 				   struct logger *logger)
 {
 	int flags = 0;
