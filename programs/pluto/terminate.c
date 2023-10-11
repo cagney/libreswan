@@ -143,7 +143,9 @@ static void delete_v2_states(struct connection *c,
 		/* announce to the world */
 		state_attach(&(*ike)->sa, c->logger);
 		(*ike)->sa.st_viable_parent = false;
-		record_n_send_n_log_v2_delete(*ike, HERE);
+		if (IS_IKE_SA_ESTABLISHED(&(*ike)->sa)) {
+			record_n_send_n_log_v2_delete(*ike, HERE);
+		}
 		return;
 	case WHACK_LURKING_CHILD:
 		state_attach(&(*child)->sa, c->logger);
