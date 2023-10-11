@@ -411,6 +411,9 @@ void whack_connection_states(struct connection *c,
 		pdbg(c->logger, "%s()  dispatching START to "PRI_SO,
 		     __func__, pri_so(ike->sa.st_serialno));
 		whack_state(c, &ike, NULL, WHACK_START_IKE, context);
+	} else if (c->established_ike_sa != SOS_NOBODY) {
+		pdbg(c->logger, "%s()  skipping START, IKE SA "PRI_SO" not found",
+		     __func__, pri_so(c->established_ike_sa));
 	} else {
 		pdbg(c->logger, "%s()  skipping START, no IKE", __func__);
 	}
