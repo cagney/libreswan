@@ -207,3 +207,4 @@ local-install:
 
 include ${LIBRESWANSRCDIR}/mk/docker-targets.mk
 include ${LIBRESWANSRCDIR}/mk/web-targets.mk
+include mk/documentation.mk
