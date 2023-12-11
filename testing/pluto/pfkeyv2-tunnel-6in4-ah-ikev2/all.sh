@@ -1,0 +1,94 @@
+netbsde# ../../guestbin/netbsd-prep.sh # note: swan-prep does not yet support BSD
+ipsec.conf -> PATH/etc/ipsec.conf
+ipsec.secrets -> PATH/etc/ipsec.secrets
+netbsde# ipsec start
+Redirecting to: [initsystem]
+Initializing NSS database
+Starting pluto.
+netbsde# ../../guestbin/wait-until-pluto-started
+netbsde# ipsec auto --add eastnet-westnet-ikev2
+"eastnet-westnet-ikev2": warning: PF_KEY v2 kernel interface does not support ESN so disabling
+"eastnet-westnet-ikev2": added IKEv2 connection
+netbsde# ipsec whack --impair suppress-retransmits
+netbsde# echo "initdone"
+initdone
+netbsdw# ../../guestbin/netbsd-prep.sh # note: swan-prep does not yet support BSD
+ipsec.conf -> PATH/etc/ipsec.conf
+ipsec.secrets -> PATH/etc/ipsec.secrets
+netbsdw# ipsec start
+Redirecting to: [initsystem]
+Initializing NSS database
+Starting pluto.
+netbsdw# ../../guestbin/wait-until-pluto-started
+netbsdw# ipsec auto --add eastnet-westnet-ikev2
+"eastnet-westnet-ikev2": warning: PF_KEY v2 kernel interface does not support ESN so disabling
+"eastnet-westnet-ikev2": added IKEv2 connection
+netbsdw# echo "initdone"
+initdone
+netbsdw# ../../guestbin/ping-once.sh --down -I 2001:db8:0:1::254 2001:db8:0:2::254
+down
+netbsdw# ipsec auto --up eastnet-westnet-ikev2
+"eastnet-westnet-ikev2" #1: initiating IKEv2 connection to 192.1.2.23 using UDP
+"eastnet-westnet-ikev2" #1: sent IKE_SA_INIT request to 192.1.2.23:500
+"eastnet-westnet-ikev2" #1: sent IKE_AUTH request {cipher=AES_CBC_256 integ=HMAC_SHA1_96 prf=HMAC_SHA1 group=MODP2048}
+"eastnet-westnet-ikev2" #1: initiator established IKE SA; authenticated peer using authby=secret and ID_FQDN '@east'
+"eastnet-westnet-ikev2" #2: initiator established Child SA using #1; IPsec tunnel [2001:db8:0:1::/64===2001:db8:0:2::/64] {AH=>0xAHAH <0xAHAH xfrm=HMAC_SHA1_96 DPD=passive}
+netbsdw# ../../guestbin/ipsec-kernel-policy.sh
+2001:db8:0:2::/64[any] 2001:db8:0:1::/64[any] 255(reserved)
+	in ipsec
+	ah/tunnel/192.1.2.23-192.1.2.45/require
+	spid=1 seq=1 pid=PID
+	refcnt=0
+2001:db8:0:1::/64[any] 2001:db8:0:2::/64[any] 255(reserved)
+	out ipsec
+	ah/tunnel/192.1.2.45-192.1.2.23/require
+	spid=2 seq=0 pid=PID
+	refcnt=0
+netbsdw# ../../guestbin/ping-once.sh --up -I 2001:db8:0:1::254 2001:db8:0:2::254
+up
+netbsdw# ../../guestbin/ipsec-kernel-state.sh
+192.1.2.23 192.1.2.45 
+	ah mode=any spi=SPISPI(0xSPISPI) reqid=16388(0x00004004)
+	A: hmac-sha1  XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX
+	seq=0x00000001 replay=8 flags=0x00000000 state=mature 
+	created: TIMESTAMP	current: TIMESTAMP
+	diff: N(s)	hard: 28800(s)	soft: 28800(s)
+	last: TIMESTAMP	hard: 0(s)	soft: 0(s)
+	current: 124(bytes)	hard: 0(bytes)	soft: 0(bytes)
+	allocated: 1	hard: 0	soft: 0
+	sadb_seq=1 pid=PID refcnt=0
+192.1.2.45 192.1.2.23 
+	ah mode=any spi=SPISPI(0xSPISPI) reqid=16388(0x00004004)
+	A: hmac-sha1  XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX
+	seq=0x00000001 replay=8 flags=0x00000000 state=mature 
+	created: TIMESTAMP	current: TIMESTAMP
+	diff: N(s)	hard: 28800(s)	soft: 28800(s)
+	last: TIMESTAMP	hard: 0(s)	soft: 0(s)
+	current: 148(bytes)	hard: 0(bytes)	soft: 0(bytes)
+	allocated: 1	hard: 0	soft: 0
+	sadb_seq=0 pid=PID refcnt=0
+netbsdw# ../../guestbin/ping-once.sh --medium --up -I 2001:db8:0:1::254 2001:db8:0:2::254
+up
+netbsdw# ../../guestbin/ipsec-kernel-state.sh
+192.1.2.23 192.1.2.45 
+	ah mode=any spi=SPISPI(0xSPISPI) reqid=16388(0x00004004)
+	A: hmac-sha1  XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX
+	seq=0x00000002 replay=8 flags=0x00000000 state=mature 
+	created: TIMESTAMP	current: TIMESTAMP
+	diff: N(s)	hard: 28800(s)	soft: 28800(s)
+	last: TIMESTAMP	hard: 0(s)	soft: 0(s)
+	current: 1192(bytes)	hard: 0(bytes)	soft: 0(bytes)
+	allocated: 2	hard: 0	soft: 0
+	sadb_seq=1 pid=PID refcnt=0
+192.1.2.45 192.1.2.23 
+	ah mode=any spi=SPISPI(0xSPISPI) reqid=16388(0x00004004)
+	A: hmac-sha1  XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX
+	seq=0x00000002 replay=8 flags=0x00000000 state=mature 
+	created: TIMESTAMP	current: TIMESTAMP
+	diff: N(s)	hard: 28800(s)	soft: 28800(s)
+	last: TIMESTAMP	hard: 0(s)	soft: 0(s)
+	current: 1240(bytes)	hard: 0(bytes)	soft: 0(bytes)
+	allocated: 2	hard: 0	soft: 0
+	sadb_seq=0 pid=PID refcnt=0
+netbsdw# dmesg | grep ipsec
+ 
