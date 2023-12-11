@@ -131,7 +131,7 @@ _GUEST_COMMAND_REGEX = re.compile(_GUEST_COMMAND_PATTERN)
 
 def commands(directory, logger):
 
-    all_console_txt = os.path.join(directory, "all.console.txt")
+    all_console_txt = os.path.join(directory, "all.sh")
     if os.path.exists(all_console_txt):
         commands = Commands()
         for line in open(all_console_txt, "r"):
@@ -160,5 +160,4 @@ def commands(directory, logger):
             if line:
                 command = Command(script.guest_name, line)
                 commands.append(command)
-
     return commands
