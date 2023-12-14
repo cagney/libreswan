@@ -530,6 +530,7 @@ kvmplutotest	ikev2-xfrmi-03				good
 kvmplutotest	ikev2-xfrmi-04				good
 kvmplutotest	ikev2-xfrmi-05-remote-access-client	wip	github/541
 kvmplutotest	ikev2-xfrmi-06				good
+kvmplutotest	ikev2-xfrmi-06-ipv6			wip
 kvmplutotest	ikev2-xfrmi-07				good
 kvmplutotest	ikev2-xfrmi-08				good
 kvmplutotest	ikev2-xfrmi-09-systemd-networkd 	good
