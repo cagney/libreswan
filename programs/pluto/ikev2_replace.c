@@ -38,11 +38,15 @@
 
 /* Replace SA with a fresh one that is similar
  *
- * Shares some logic with ipsecdoi_initiate, but not the same!
+ * Shares some logic with initiate(), but not the same!
+ *
  * - we must not reuse the ISAKMP SA if we are trying to replace it!
- * - if trying to replace IPSEC SA, use ipsecdoi_initiate to build
- *   ISAKMP SA if needed.
- * - duplicate whack fd, if live.
+ *
+ * - if trying to replace IPSEC SA, use initiate to build ISAKMP SA if
+ *   needed.
+ *
+ * - duplicate whack fd (attached to state or connectin?), if live.
+ *
  * Does not delete the old state -- someone else will do that.
  */
 
@@ -56,24 +60,15 @@ void ikev2_replace(struct state *st)
 
 	if (IS_IKE_SA(st)) {
 		/*
-		 * Should this call capture_child_rekey_policy(st) or
-		 * child_sa_policy(c) to capture the Child SA's
-		 * policy?
-		 *
-		 * Probably not.
-		 *
-		 * When the IKE (ISAKMP) SA initiator code sees
-		 * policy=LEMPTY it skips scheduling the connection as
-		 * a Child SA to be initiated once the IKE SA
-		 * establishes.  Instead the revival code will
-		 * schedule the connection as a child.
+		 * For first child, start with child's policy in
+		 * connection.
 		 */
 		struct connection *c = st->st_connection;
-		lset_t policy = LEMPTY;
-		if (IS_IKE_SA_ESTABLISHED(st)) {
+		lset_t child_policy = child_sa_policy(c);
+
+		if (IS_IKE_SA_ESTABLISHED(st))
 			log_state(RC_LOG, st, "initiate reauthentication of IKE SA");
-		}
-		initiate_v2_IKE_SA_INIT_request(c, st, policy, &inception,
+		initiate_v2_IKE_SA_INIT_request(c, st, child_policy, &inception,
 						HUNK_AS_SHUNK(c->child.sec_label),
 						/*background?*/false);
 
@@ -85,9 +80,9 @@ void ikev2_replace(struct state *st)
 		 * security.  I admit that this doesn't capture
 		 * everything.
 		 */
-		lset_t policy = capture_child_rekey_policy(st);
+		lset_t child_policy = capture_child_rekey_policy(st);
 
-		initiate(st->st_connection, policy, st->st_serialno, &inception,
+		initiate(st->st_connection, child_policy, st->st_serialno, &inception,
 			 null_shunk, /*background?*/false, st->logger,
 			 INITIATED_BY_REPLACE, HERE);
 	}
