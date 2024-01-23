@@ -1,10 +1,12 @@
-ipsec auto --up westnet-eastnet-ikev2a
+ipsec up westnet-eastnet-ikev2a
 ../../guestbin/ping-once.sh --up -I 192.0.1.254 192.0.2.254
+ipsec trafficstatus westnet-eastnet-ikev2a
 
-ipsec auto --up westnet-eastnet-ikev2b
+ipsec up westnet-eastnet-ikev2b
 ../../guestbin/ping-once.sh --up -I 192.0.100.254 192.0.200.254
+ipsec trafficstatus westnet-eastnet-ikev2b
 
-ipsec auto --up westnet-eastnet-ikev2c
+ipsec up westnet-eastnet-ikev2c
 ipsec whack --trafficstatus
 
 # wait for the replace
@@ -15,7 +17,10 @@ ipsec whack --trafficstatus
 ../../guestbin/wait-for-pluto.sh '#8: initiator established Child SA using #5' | sed -e 's/[a-c]"/."/'
 
 ../../guestbin/ping-once.sh --up -I 192.0.1.254 192.0.2.254
+ipsec trafficstatus westnet-eastnet-ikev2a
+
 ../../guestbin/ping-once.sh --up -I 192.0.100.254 192.0.200.254
+ipsec trafficstatus westnet-eastnet-ikev2b
 
 ipsec whack --trafficstatus |  sed -e 's/[a-c]"/."/'
 

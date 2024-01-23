@@ -31,7 +31,7 @@ west #
  echo "initdone"
 initdone
 west #
- ipsec auto --up westnet-eastnet-ikev2a
+ ipsec up westnet-eastnet-ikev2a
 "westnet-eastnet-ikev2a" #1: initiating IKEv2 connection to 192.1.2.23 using UDP
 "westnet-eastnet-ikev2a" #1: sent IKE_SA_INIT request to 192.1.2.23:UDP/500
 "westnet-eastnet-ikev2a" #1: processed IKE_SA_INIT response from 192.1.2.23:UDP/500 {cipher=AES_GCM_16_256 integ=n/a prf=HMAC_SHA2_512 group=DH19}, initiating IKE_AUTH
@@ -42,7 +42,10 @@ west #
  ../../guestbin/ping-once.sh --up -I 192.0.1.254 192.0.2.254
 up
 west #
- ipsec auto --up westnet-eastnet-ikev2b
+ ipsec trafficstatus westnet-eastnet-ikev2a
+#2: "westnet-eastnet-ikev2a", type=ESP, add_time=1234567890, inBytes=84, outBytes=84, maxBytes=2^63B, id='@east'
+west #
+ ipsec up westnet-eastnet-ikev2b
 "westnet-eastnet-ikev2b" #3: initiating Child SA using IKE SA #1
 "westnet-eastnet-ikev2b" #3: sent CREATE_CHILD_SA request to create Child SA using IKE SA #1
 "westnet-eastnet-ikev2b" #3: initiator established Child SA using #1; IPsec tunnel [192.0.100.0/24===192.0.200.0/24] {ESP/ESN=>0xESPESP <0xESPESP xfrm=AES_GCM_16_256-NONE DPD=passive}
@@ -50,7 +53,10 @@ west #
  ../../guestbin/ping-once.sh --up -I 192.0.100.254 192.0.200.254
 up
 west #
- ipsec auto --up westnet-eastnet-ikev2c
+ ipsec trafficstatus westnet-eastnet-ikev2b
+#3: "westnet-eastnet-ikev2b", type=ESP, add_time=1234567890, inBytes=84, outBytes=84, maxBytes=2^63B, id='@east'
+west #
+ ipsec up westnet-eastnet-ikev2c
 "westnet-eastnet-ikev2c" #4: initiating Child SA using IKE SA #1
 "westnet-eastnet-ikev2c" #4: sent CREATE_CHILD_SA request to create Child SA using IKE SA #1
 "westnet-eastnet-ikev2c" #4: initiator established Child SA using #1; IPsec tunnel [192.0.101.0/24===192.0.201.0/24] {ESP/ESN=>0xESPESP <0xESPESP xfrm=AES_GCM_16_256-NONE DPD=passive}
@@ -66,10 +72,10 @@ west #
 "westnet-eastnet-ikev2a" #5: initiating IKEv2 connection to replace established IKE SA #1
 west #
  ../../guestbin/wait-for-pluto.sh '#6: initiator established Child SA using #5' | sed -e 's/[a-c]"/."/'
-"westnet-eastnet-ikev2." #6: initiator established Child SA using #5; IPsec tunnel [192.0.101.0/24===192.0.201.0/24] {ESP/ESN=>0xESPESP <0xESPESP xfrm=AES_GCM_16_256-NONE DPD=passive}
+"westnet-eastnet-ikev2." #6: initiator established Child SA using #5; IPsec tunnel [192.0.100.0/24===192.0.200.0/24] {ESP/ESN=>0xESPESP <0xESPESP xfrm=AES_GCM_16_256-NONE DPD=passive}
 west #
  ../../guestbin/wait-for-pluto.sh '#7: initiator established Child SA using #5' | sed -e 's/[a-c]"/."/'
-"westnet-eastnet-ikev2." #7: initiator established Child SA using #5; IPsec tunnel [192.0.100.0/24===192.0.200.0/24] {ESP/ESN=>0xESPESP <0xESPESP xfrm=AES_GCM_16_256-NONE DPD=passive}
+"westnet-eastnet-ikev2." #7: initiator established Child SA using #5; IPsec tunnel [192.0.101.0/24===192.0.201.0/24] {ESP/ESN=>0xESPESP <0xESPESP xfrm=AES_GCM_16_256-NONE DPD=passive}
 west #
  ../../guestbin/wait-for-pluto.sh '#8: initiator established Child SA using #5' | sed -e 's/[a-c]"/."/'
 "westnet-eastnet-ikev2." #8: initiator established Child SA using #5; IPsec tunnel [192.0.1.0/24===192.0.2.0/24] {ESP/ESN=>0xESPESP <0xESPESP xfrm=AES_GCM_16_256-NONE DPD=passive}
@@ -77,13 +83,19 @@ west #
  ../../guestbin/ping-once.sh --up -I 192.0.1.254 192.0.2.254
 up
 west #
+ ipsec trafficstatus westnet-eastnet-ikev2a
+#8: "westnet-eastnet-ikev2a", type=ESP, add_time=1234567890, inBytes=84, outBytes=84, maxBytes=2^63B, id='@east'
+west #
  ../../guestbin/ping-once.sh --up -I 192.0.100.254 192.0.200.254
 up
 west #
+ ipsec trafficstatus westnet-eastnet-ikev2b
+#6: "westnet-eastnet-ikev2b", type=ESP, add_time=1234567890, inBytes=84, outBytes=84, maxBytes=2^63B, id='@east'
+west #
  ipsec whack --trafficstatus |  sed -e 's/[a-c]"/."/'
 #8: "westnet-eastnet-ikev2.", type=ESP, add_time=1234567890, inBytes=84, outBytes=84, maxBytes=2^63B, id='@east'
-#7: "westnet-eastnet-ikev2.", type=ESP, add_time=1234567890, inBytes=84, outBytes=84, maxBytes=2^63B, id='@east'
-#6: "westnet-eastnet-ikev2.", type=ESP, add_time=1234567890, inBytes=0, outBytes=0, maxBytes=2^63B, id='@east'
+#6: "westnet-eastnet-ikev2.", type=ESP, add_time=1234567890, inBytes=84, outBytes=84, maxBytes=2^63B, id='@east'
+#7: "westnet-eastnet-ikev2.", type=ESP, add_time=1234567890, inBytes=0, outBytes=0, maxBytes=2^63B, id='@east'
 west #
  echo done
 done
