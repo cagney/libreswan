@@ -191,6 +191,19 @@ struct hidden_variables {
 };
 
 /*
+ * Parameters negotiated between IKE SAs.  When ever an IKE SA is
+ * rekeyed, these parameters are copied to the new SA so that it
+ * sticks with existing parameters.
+ */
+
+struct st_v2_ike {
+	bool ppk_enabled;
+	bool fragmentation_enabled;
+	bool mobike_enabled;
+	bool intermediate_enabled;
+};
+
+/*
  * On entry to this macro, when crypto has been off loaded then
  * st_offloaded.job is non-NULL.  However, with XAUTH immediate,
  * there's nothing to check.
@@ -438,7 +451,6 @@ struct state {
 	struct {
 		chunk_t initiator;	/* calculated from my last Intermediate Exchange packet */
 		chunk_t responder;	/* calculated from peers last Intermediate Exchange packet */
-		bool enabled;		/* both ends agree/use Intermediate Exchange */
 		uint32_t id;		/* ID of last IKE_INTERMEDIATE exchange */
 	} st_v2_ike_intermediate;
 
@@ -658,7 +670,6 @@ struct state {
 	 * Post-quantum Preshared Key variables (v2)
 	 */
 	bool st_ppk_used;			/* both ends agreed on PPK ID and PPK */
-	bool st_v2_ike_ppk_enabled;		/* does remote peer support PPK? */
 
 	chunk_t st_no_ppk_auth;
 	PK11SymKey *st_sk_d_no_ppk;
@@ -680,6 +691,8 @@ struct state {
 	struct pending *st_pending;
 
 	struct hidden_variables hidden_variables;
+
+	struct st_v2_ike st_v2_ike;
 
 	char st_xauth_username[MAX_XAUTH_USERNAME_LEN];	/* NUL-terminated */
 	chunk_t st_xauth_password;
@@ -711,7 +724,6 @@ struct state {
 	struct isakmp_quirks quirks;            /* work arounds for faults in other products */
 	bool st_xauth_soft;                     /* XAUTH failed but policy is to soft fail */
 	bool st_v1_seen_fragmentation_supported;	/* v1 frag vid */
-	bool st_v2_ike_fragmentation_enabled;	/* v2 frag notify */
 	bool st_seen_hashnotify;		/* did we receive hash algo notification in IKE_INIT, then send in response as well */
 	bool st_v1_seen_fragments;              /* did we receive ike fragments from peer, if so use them in return as well */
 	bool st_seen_no_tfc;			/* did we receive ESP_TFC_PADDING_NOT_SUPPORTED */
@@ -724,7 +736,6 @@ struct state {
 
 	/* IKEv2 IKE SA only */
 	struct {
-		bool enabled;			/* did we agree to MOBIKE? */
 		bool del_src_ip;		/* for mobike migrate unroute */
 		/* IKEv2 MOBIKE probe copies */
 		ip_address deleted_local_addr;	/* kernel deleted address */

@@ -490,7 +490,7 @@ static stf_status process_v2_IKE_AUTH_request_EAP_start_signature_continue(struc
 	bool send_cert = ikev2_send_cert_decision(ike);
 
 	/* send any NOTIFY payloads */
-	if (ike->sa.st_v2_mobike.enabled) {
+	if (ike->sa.st_v2_ike.mobike_enabled) {
 		if (!emit_v2N(v2N_MOBIKE_SUPPORTED, response.pbs)) {
 			return STF_INTERNAL_ERROR;
 		}
@@ -790,9 +790,9 @@ stf_status process_v2_IKE_AUTH_request_EAP_final(struct ike_sa *ike,
 		return STF_INTERNAL_ERROR;
 	}
 
-	if (ike->sa.st_v2_ike_intermediate.enabled) {
+	if (ike->sa.st_v2_ike.intermediate_enabled) {
 		ldbg_sa(ike, "disabling IKE_INTERMEDIATE, but why?");
-		ike->sa.st_v2_ike_intermediate.enabled = false;
+		ike->sa.st_v2_ike.intermediate_enabled = false;
 	}
 
 	/*

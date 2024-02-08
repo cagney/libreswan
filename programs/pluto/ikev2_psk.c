@@ -75,7 +75,7 @@ diag_t ikev2_calculate_psk_sighash(enum perspective perspective,
 	passert(ike->sa.hidden_variables.st_skeyid_calculated);
 
 	chunk_t intermediate_auth = empty_chunk;
-	if (ike->sa.st_v2_ike_intermediate.enabled) {
+	if (ike->sa.st_v2_ike.intermediate_enabled) {
 		intermediate_auth = clone_hunk_hunk(ike->sa.st_v2_ike_intermediate.initiator,
 						    ike->sa.st_v2_ike_intermediate.responder,
 						    "IntAuth_*_I_A | IntAuth_*_R");

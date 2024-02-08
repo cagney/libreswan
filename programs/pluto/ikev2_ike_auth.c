@@ -106,7 +106,7 @@ stf_status initiate_v2_IKE_AUTH_request(struct ike_sa *ike, struct msg_digest *m
 	 * Stash the no-ppk keys in st_skey_*_no_ppk, and then
 	 * scramble the st_skey_* keys with PPK.
 	 */
-	if (ike->sa.st_v2_ike_ppk_enabled) {
+	if (ike->sa.st_v2_ike.ppk_enabled) {
 		chunk_t *ppk_id;
 		const shunk_t ppk = get_connection_ppk_initiator(ike->sa.st_connection, &ppk_id);
 
@@ -142,7 +142,7 @@ stf_status initiate_v2_IKE_AUTH_request(struct ike_sa *ike, struct msg_digest *m
 				 * Identity, so we pretend we didn't
 				 * see USE_PPK.
 				 */
-				ike->sa.st_v2_ike_ppk_enabled = false;
+				ike->sa.st_v2_ike.ppk_enabled = false;
 			}
 		}
 	}
@@ -366,7 +366,7 @@ stf_status initiate_v2_IKE_AUTH_request_signature_continue(struct ike_sa *ike,
 	 * If we and responder are willing to use a PPK, we need to
 	 * generate NO_PPK_AUTH as well as PPK-based AUTH payload
 	 */
-	if (ike->sa.st_v2_ike_ppk_enabled) {
+	if (ike->sa.st_v2_ike.ppk_enabled) {
 		chunk_t *ppk_id;
 		get_connection_ppk_initiator(ike->sa.st_connection, &ppk_id);
 		struct ppk_id_payload ppk_id_p = { .type = 0, };
@@ -418,9 +418,9 @@ stf_status initiate_v2_IKE_AUTH_request_signature_continue(struct ike_sa *ike,
 				  "Failed to calculate additional NULL_AUTH");
 			return STF_FATAL;
 		}
-		if (ike->sa.st_v2_ike_intermediate.enabled) {
+		if (ike->sa.st_v2_ike.intermediate_enabled) {
 			ldbg_sa(ike, "disabling IKE_INTERMEDIATE, but why?");
-			ike->sa.st_v2_ike_intermediate.enabled = false;
+			ike->sa.st_v2_ike.intermediate_enabled = false;
 		}
 		if (!emit_v2N_hunk(v2N_NULL_AUTH, null_auth, request.pbs)) {
 			free_chunk_content(&null_auth);
@@ -606,7 +606,7 @@ stf_status process_v2_IKE_AUTH_request_standard_payloads(struct ike_sa *ike, str
 		if (c->remote->host.config->type == KH_ANY) {
 			ldbg_sa(ike, "enabling mobike");
 			/* only allow %any connection to mobike */
-			ike->sa.st_v2_mobike.enabled = true;
+			ike->sa.st_v2_ike.mobike_enabled = true;
 		} else {
 			llog_sa(RC_LOG, ike,
 				"not responding with v2N_MOBIKE_SUPPORTED, that end is not %%any");
@@ -909,7 +909,7 @@ static stf_status process_v2_IKE_AUTH_request_auth_signature_continue(struct ike
 	bool send_cert = ikev2_send_cert_decision(ike);
 
 	/* send any NOTIFY payloads */
-	if (ike->sa.st_v2_mobike.enabled) {
+	if (ike->sa.st_v2_ike.mobike_enabled) {
 		if (!emit_v2N(v2N_MOBIKE_SUPPORTED, response.pbs))
 			return STF_INTERNAL_ERROR;
 	}
@@ -966,9 +966,9 @@ static stf_status process_v2_IKE_AUTH_request_auth_signature_continue(struct ike
 		return STF_INTERNAL_ERROR;
 	}
 
-	if (ike->sa.st_v2_ike_intermediate.enabled) {
+	if (ike->sa.st_v2_ike.intermediate_enabled) {
 		ldbg_sa(ike, "disabling IKE_INTERMEDIATE, but why?");
-		ike->sa.st_v2_ike_intermediate.enabled = false;
+		ike->sa.st_v2_ike.intermediate_enabled = false;
 	}
 
 	/*
@@ -1069,7 +1069,7 @@ static stf_status process_v2_IKE_AUTH_response_post_cert_decode(struct state *ik
 	 * NO_PPK_AUTH payload. We should revert our key material to
 	 * NO_PPK versions.
 	 */
-	if (ike->sa.st_v2_ike_ppk_enabled &&
+	if (ike->sa.st_v2_ike.ppk_enabled &&
 	    md->pd[PD_v2N_PPK_IDENTITY] == NULL &&
 	    c->config->ppk.allow) {
 		/* discard the PPK based calculations */
@@ -1125,7 +1125,7 @@ static stf_status process_v2_IKE_AUTH_response_post_cert_decode(struct state *ik
 		return redirect_status;
 	}
 
-	ike->sa.st_v2_mobike.enabled =
+	ike->sa.st_v2_ike.mobike_enabled =
 		accept_v2_notification(v2N_MOBIKE_SUPPORTED, ike->sa.logger, md, c->config->mobike);
 
 	/*

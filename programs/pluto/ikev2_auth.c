@@ -90,7 +90,7 @@ struct crypt_mac v2_calculate_sighash(const struct ike_sa *ike,
 		DBG_dump_hunk("inputs to hash1 (first packet)", firstpacket);
 		DBG_dump_hunk(nonce_name, *nonce);
 		DBG_dump_hunk("idhash", *idhash);
-		if (ike->sa.st_v2_ike_intermediate.enabled) {
+		if (ike->sa.st_v2_ike.intermediate_enabled) {
 			DBG_dump_hunk("IntAuth_*_I_A", ia1);
 			DBG_dump_hunk("IntAuth_*_R_A", ia2);
 		}
@@ -103,7 +103,7 @@ struct crypt_mac v2_calculate_sighash(const struct ike_sa *ike,
 	/* we took the PRF(SK_d,ID[ir]'), so length is prf hash length */
 	passert(idhash->len == ike->sa.st_oakley.ta_prf->prf_output_size);
 	crypt_hash_digest_hunk(ctx, "IDHASH", *idhash);
-	if (ike->sa.st_v2_ike_intermediate.enabled) {
+	if (ike->sa.st_v2_ike.intermediate_enabled) {
 		crypt_hash_digest_hunk(ctx, "IntAuth_*_I_A", ia1);
 		crypt_hash_digest_hunk(ctx, "IntAuth_*_R_A", ia2);
 		/* IKE AUTH's first Message ID */
@@ -928,7 +928,7 @@ void v2_IKE_AUTH_initiator_id_payload(struct ike_sa *ike)
 	ike->sa.st_v2_id_payload.mac = v2_hash_id_payload("IDi", ike,
 					    "st_skey_pi_nss",
 					    ike->sa.st_skey_pi_nss);
-	if (ike->sa.st_v2_ike_ppk_enabled && !c->config->ppk.insist) {
+	if (ike->sa.st_v2_ike.ppk_enabled && !c->config->ppk.insist) {
 		/* ID payload that we've build is the same */
 		ike->sa.st_v2_id_payload.mac_no_ppk_auth =
 			v2_hash_id_payload("IDi (no-PPK)", ike,

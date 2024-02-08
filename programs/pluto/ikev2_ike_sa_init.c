@@ -114,7 +114,7 @@ void llog_v2_IKE_SA_INIT_success(struct ike_sa *ike)
 		if (ike->sa.st_sa_role == SA_INITIATOR) {
 			jam_string(buf, ", initiating ");
 			enum isakmp_xchg_type ix =
-				(ike->sa.st_v2_ike_intermediate.enabled ? ISAKMP_v2_IKE_INTERMEDIATE :
+				(ike->sa.st_v2_ike.intermediate_enabled ? ISAKMP_v2_IKE_INTERMEDIATE :
 				 ISAKMP_v2_IKE_AUTH);
 			jam_enum_short(buf, &ikev2_exchange_names, ix);
 		}
@@ -1034,14 +1034,14 @@ stf_status process_v2_IKE_SA_INIT_request(struct ike_sa *ike,
 	}
 
 	/* extract results */
-	ike->sa.st_v2_ike_fragmentation_enabled =
+	ike->sa.st_v2_ike.fragmentation_enabled =
 		accept_v2_notification(v2N_IKEV2_FRAGMENTATION_SUPPORTED,
 				       ike->sa.logger, md, c->config->ike_frag.allow);
 
-	ike->sa.st_v2_ike_ppk_enabled =
+	ike->sa.st_v2_ike.ppk_enabled =
 		accept_v2_notification(v2N_USE_PPK,
 				       ike->sa.logger, md, c->config->ppk.allow);
-	if (c->config->ppk.insist && !ike->sa.st_v2_ike_ppk_enabled) {
+	if (c->config->ppk.insist && !ike->sa.st_v2_ike.ppk_enabled) {
 		record_v2N_response(ike->sa.logger, ike, md,
 				    v2N_NO_PROPOSAL_CHOSEN,
 				    NULL, UNENCRYPTED_PAYLOAD);
@@ -1209,22 +1209,22 @@ static stf_status process_v2_IKE_SA_INIT_request_continue(struct state *ike_st,
 	}
 
 	/* Send fragmentation support notification response? */
-	if (ike->sa.st_v2_ike_fragmentation_enabled) {
+	if (ike->sa.st_v2_ike.fragmentation_enabled) {
 		if (!emit_v2N(v2N_IKEV2_FRAGMENTATION_SUPPORTED, response.pbs))
 			return STF_INTERNAL_ERROR;
 	}
 
 	/* Send USE_PPK Notify payload */
-	if (ike->sa.st_v2_ike_ppk_enabled) {
+	if (ike->sa.st_v2_ike.ppk_enabled) {
 		if (!emit_v2N(v2N_USE_PPK, response.pbs))
 			return STF_INTERNAL_ERROR;
 	 }
 
 	/* Send INTERMEDIATE_EXCHANGE_SUPPORTED Notify payload */
-	ike->sa.st_v2_ike_intermediate.enabled =
+	ike->sa.st_v2_ike.intermediate_enabled =
 		accept_v2_notification(v2N_INTERMEDIATE_EXCHANGE_SUPPORTED,
 				       ike->sa.logger, md, c->config->intermediate);
-	if (ike->sa.st_v2_ike_intermediate.enabled) {
+	if (ike->sa.st_v2_ike.intermediate_enabled) {
 		if (!emit_v2N(v2N_INTERMEDIATE_EXCHANGE_SUPPORTED, response.pbs)) {
 			return STF_INTERNAL_ERROR;
 		}
@@ -1462,14 +1462,14 @@ stf_status process_v2_IKE_SA_INIT_response(struct ike_sa *ike,
 		(impair.childless_ikev2_supported ? false :
 		 md->pd[PD_v2N_CHILDLESS_IKEV2_SUPPORTED] != NULL);
 
-	ike->sa.st_v2_ike_fragmentation_enabled =
+	ike->sa.st_v2_ike.fragmentation_enabled =
 		accept_v2_notification(v2N_IKEV2_FRAGMENTATION_SUPPORTED,
 				       ike->sa.logger, md, c->config->ike_frag.allow);
 
-	ike->sa.st_v2_ike_ppk_enabled =
+	ike->sa.st_v2_ike.ppk_enabled =
 		accept_v2_notification(v2N_USE_PPK,
 				       ike->sa.logger, md, c->config->ppk.allow);
-	if (c->config->ppk.insist && !ike->sa.st_v2_ike_ppk_enabled) {
+	if (c->config->ppk.insist && !ike->sa.st_v2_ike.ppk_enabled) {
 		llog_sa(RC_LOG_SERIOUS, ike,
 			"connection has ppk=insist but peer does not support PPK");
 		return STF_FATAL;
@@ -1610,7 +1610,7 @@ stf_status process_v2_IKE_SA_INIT_response(struct ike_sa *ike,
 	 * For now, do only one Intermediate Exchange round and
 	 * proceed with IKE_AUTH.
 	 */
-	ike->sa.st_v2_ike_intermediate.enabled =
+	ike->sa.st_v2_ike.intermediate_enabled =
 		accept_v2_notification(v2N_INTERMEDIATE_EXCHANGE_SUPPORTED,
 				       ike->sa.logger, md, c->config->intermediate);
 
@@ -1672,7 +1672,7 @@ stf_status process_v2_IKE_SA_INIT_response_continue(struct state *ike_sa,
 	 */
 
 	stf_status (*next_exchange)(struct ike_sa *ike, struct msg_digest *md);
-	if (ike->sa.st_v2_ike_intermediate.enabled) {
+	if (ike->sa.st_v2_ike.intermediate_enabled) {
 		next_exchange = initiate_v2_IKE_INTERMEDIATE_request;
 	} else {
 		next_exchange = initiate_v2_IKE_AUTH_request;

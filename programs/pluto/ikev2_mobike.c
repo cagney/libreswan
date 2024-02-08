@@ -205,7 +205,7 @@ static bool mobike_check_established(struct ike_sa *ike)
 {
 	struct connection *c = ike->sa.st_connection;
 	bool ret = (c->config->mobike &&
-		    ike->sa.st_v2_mobike.enabled &&
+		    ike->sa.st_v2_ike.mobike_enabled &&
 		    IS_IKE_SA_ESTABLISHED(&ike->sa));
 
 	return ret;

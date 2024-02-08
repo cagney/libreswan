@@ -1215,6 +1215,7 @@ static struct child_sa *duplicate_state(struct connection *c,
 
 	child->sa.quirks = ike->sa.quirks;
 	child->sa.hidden_variables = ike->sa.hidden_variables;
+	child->sa.st_v2_ike = ike->sa.st_v2_ike;
 	endpoint_buf eb;
 	dbg("#%lu setting local endpoint to %s from #%ld.st_localport "PRI_WHERE,
 	    child->sa.st_serialno,
@@ -1223,9 +1224,7 @@ static struct child_sa *duplicate_state(struct connection *c,
 	passert(child->sa.st_ike_version == ike->sa.st_ike_version);
 	child->sa.st_ikev2_anon = ike->sa.st_ikev2_anon;
 	child->sa.st_v1_seen_fragmentation_supported = ike->sa.st_v1_seen_fragmentation_supported;
-	child->sa.st_v2_ike_fragmentation_enabled = ike->sa.st_v2_ike_fragmentation_enabled;
 	child->sa.st_v1_seen_fragments = ike->sa.st_v1_seen_fragments;
-	child->sa.st_v2_ike_ppk_enabled = ike->sa.st_v2_ike_ppk_enabled;
 	child->sa.st_seen_redirect_sup = ike->sa.st_seen_redirect_sup;
 	child->sa.st_sent_redirect = ike->sa.st_sent_redirect;
 	child->sa.st_event = NULL;
