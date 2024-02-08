@@ -2752,6 +2752,7 @@ static void echo_proposal(struct isakmp_proposal r_proposal,    /* proposal to e
 		 * but we'll ignore that.
 		 */
 		pi->inbound.spi = get_ipsec_cpi(sr->connection, logger);
+		pi->inbound.installed = true; /* reserved */
 		passert(pbs_out_raw(&r_proposal_pbs,
 				    ((uint8_t *) &pi->inbound.spi + IPSEC_DOI_SPI_SIZE - IPCOMP_CPI_SIZE),
 				    IPCOMP_CPI_SIZE,
@@ -2762,6 +2763,7 @@ static void echo_proposal(struct isakmp_proposal r_proposal,    /* proposal to e
 						&ip_protocol_ah : &ip_protocol_esp,
 						pi->outbound.spi,
 						logger);
+		pi->inbound.installed = true; /* reserved */
 		/* XXX should check for errors */
 		passert(pbs_out_raw(&r_proposal_pbs, (uint8_t *) &pi->inbound.spi, IPSEC_DOI_SPI_SIZE, "SPI"));
 	}

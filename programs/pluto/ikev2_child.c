@@ -117,6 +117,7 @@ static bool compute_v2_child_ipcomp_cpi(struct child_sa *larval_child)
 		return false;
 	}
 	larval_child->sa.st_ipcomp.inbound.spi = n_ipcomp_cpi;
+	larval_child->sa.st_ipcomp.inbound.installed = true;
 	return true;
 }
 
@@ -140,6 +141,7 @@ static bool compute_v2_child_spi(struct child_sa *larval_child)
 	proto_info->inbound.spi = get_ipsec_spi(cc, protocol,
 						0 /* avoid this # */,
 						larval_child->sa.logger);
+	proto_info->inbound.installed = true;
 	return (proto_info->inbound.spi != 0);
 }
 

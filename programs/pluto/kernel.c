@@ -1643,8 +1643,13 @@ static unsigned append_spi(struct dead_sa *dead,
 			   ip_address src, ip_address dst,
 			   struct logger *logger)
 {
+	if (!flow->installed) {
+		ldbg(logger, "kernel %s SPI "PRI_IPSEC_SPI" is not installed; skip deleting",
+		     name, pri_ipsec_spi(flow->spi));
+		return 0;
+	}
 	if (flow->expired[SA_HARD_EXPIRED]) {
-		ldbg(logger, "kernel expired %s SPI "PRI_IPSEC_SPI" skip deleting",
+		ldbg(logger, "kernel expired %s SPI "PRI_IPSEC_SPI"; skip deleting",
 		     name, pri_ipsec_spi(flow->spi));
 		return 0;
 	}
