@@ -468,6 +468,28 @@ static void jam_host_addr(struct jambuf *buf, struct connection_end *end)
 	}
 }
 
+/*
+ * What is the connection?  IKEv1, IKEv2, or never-negotiate?
+ *
+ * Use slightly different names compared to
+ * pluto_constants.c.
+ */
+static void jam_connection_type(struct jambuf *buf, const struct connection *c)
+{
+	if (never_negotiate(c)) {
+		static const char *const policy_shunt_names[SHUNT_POLICY_ROOF] = {
+			[SHUNT_UNSET] = "[should not happen]",
+			[SHUNT_TRAP] = "trap[should not happen]",
+			[SHUNT_NONE] = "none",
+			[SHUNT_PASS] = "passthrough",
+			[SHUNT_DROP] = "drop",
+		};
+		jam_string(buf, policy_shunt_names[c->config->never_negotiate_shunt]);
+	} else {
+		jam_string(buf, c->config->ike_info->version_name);
+	}
+}
+
 void jam_orientation(struct jambuf *buf,
 		     struct connection *c,
 		     bool oriented_details)
@@ -481,31 +503,11 @@ void jam_orientation(struct jambuf *buf,
 	 *
 	 * Should successful orientation also be logged?
 	 */
-	if (oriented(c)) {
-		if (oriented_details) {
-			jam_string(buf, "oriented ");
-		}
-	} else if (listening) {
+	if (!oriented(c) && listening) {
 		jam_string(buf, "unoriented ");
 	}
 
-	/*
-	 * What is the connection?  IKEv1, IKEv2, or never-negotiate?
-	 *
-	 * Use slightly different names compared to
-	 * pluto_constants.c.
-	 */
-	static const char *const policy_shunt_names[SHUNT_POLICY_ROOF] = {
-		[SHUNT_UNSET] = "[should not happen]",
-		[SHUNT_TRAP] = "trap[should not happen]",
-		[SHUNT_NONE] = "none",
-		[SHUNT_PASS] = "passthrough",
-		[SHUNT_DROP] = "drop",
-	};
-	const char *what =
-		(never_negotiate(c) ? policy_shunt_names[c->config->never_negotiate_shunt] :
-		 c->config->ike_info->version_name);
-	jam_string(buf, what);
+	jam_connection_type(buf, c); /* IKEv1|IKEv2|pass|... */
 	jam_string(buf, " connection");
 
 	/*
@@ -514,12 +516,10 @@ void jam_orientation(struct jambuf *buf,
 	 */
 	if (oriented(c)) {
 		if (oriented_details) {
-			jam_string(buf, " (local: ");
+			jam_string(buf, " oriented to ");
 			jam_host_addr(buf, c->local);
-			jam_string(buf, " ");
-			jam_string(buf, " remote: ");
-			jam_host_addr(buf, c->remote);
-			jam_string(buf, ")");
+			jam_string(buf, " on ");
+			jam_string(buf, c->iface->real_device_name);
 		}
 	} else if (listening) {
 		/*
