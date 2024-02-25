@@ -4120,7 +4120,7 @@ diag_t add_connection(const struct whack_message *wm, struct logger *logger)
 	LLOG_JAMBUF(RC_LOG, c->logger, buf) {
 		jam_string(buf, "added");
 		jam_string(buf, " ");
-		jam_orientation(buf, c, /*oriented_details*/false);
+		jam_orientation(buf, c, /*oriented_details*/true);
 	}
 
 	policy_buf pb;
