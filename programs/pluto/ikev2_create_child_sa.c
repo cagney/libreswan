@@ -1597,12 +1597,8 @@ stf_status process_v2_CREATE_CHILD_SA_rekey_ike_request(struct ike_sa *ike,
 				 &larval_ike->sa.st_v2_accepted_proposal,
 				 ike_proposals, larval_ike->sa.logger);
 	if (n != v2N_NOTHING_WRONG) {
-		pexpect(larval_ike->sa.st_sa_role == SA_RESPONDER);
-		record_v2N_response(larval_ike->sa.logger, ike, request_md,
-				    n, NULL, ENCRYPTED_PAYLOAD);
-		delete_child_sa(&larval_ike);
-		ike->sa.st_v2_msgid_windows.responder.wip_sa = NULL;
-		return v2_notification_fatal(n) ? STF_FATAL : STF_OK; /* IKE */
+		return reject_CREATE_CHILD_SA_request(ike, &larval_ike,
+						      request_md, n, HERE);
 	}
 
 	if (DBGP(DBG_BASE)) {
