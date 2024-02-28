@@ -197,7 +197,7 @@ stf_status process_v2_INFORMATIONAL_request(struct ike_sa *ike,
 		/*
 		 * Complete the transtion; but then wipe us out.
 		 */
-		return STF_OK_RESPONDER_DELETE_IKE;
+		return STF_OK_DELETE_IKE_FAMILY;
 	}
 
 	mobike_possibly_send_recorded(ike, md);
@@ -306,5 +306,5 @@ stf_status IKE_SA_DEL_process_v2_INFORMATIONAL_response(struct ike_sa *ike,
 	 *
 	 * Killing .v1_st is an extra safety net.
 	 */
-	return STF_OK_INITIATOR_DELETE_IKE;
+	return STF_OK_DELETE_IKE_FAMILY;
 }

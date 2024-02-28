@@ -493,7 +493,7 @@ bool redirect_ike_auth(struct ike_sa *ike, struct msg_digest *md, stf_status *re
 	}
 
 	save_redirect(ike, md, redirect_ip);
-	*redirect_status = STF_OK_INITIATOR_DELETE_IKE;
+	*redirect_status = STF_OK_DELETE_IKE_FAMILY;
 	return true;
 }
 
@@ -599,7 +599,7 @@ stf_status process_v2_IKE_SA_INIT_response_v2N_REDIRECT(struct ike_sa *ike,
 	}
 
 	save_redirect(ike, md, redirect_ip);
-	return STF_OK_INITIATOR_DELETE_IKE;
+	return STF_OK_DELETE_IKE_FAMILY;
 }
 
 void process_v2_INFORMATIONAL_request_v2N_REDIRECT(struct ike_sa *ike, struct msg_digest *md)

@@ -2728,11 +2728,10 @@ void complete_v2_state_transition(struct ike_sa *ike,
 		release_pending_whacks(&ike->sa, "internal error");
 		return;
 
-	case STF_OK_RESPONDER_DELETE_IKE:
+	case STF_OK_DELETE_IKE_FAMILY:
 		/*
-		 * Responder processing something that triggered a
-		 * delete IKE family (but not for reasons that are
-		 * fatal).
+		 * The Initiator or Responder digested something that
+		 * succeeds but also needs to delete the IKE family.
 		 *
 		 * For instance, a N(D(IKE)) request.
 		 *
@@ -2740,25 +2739,31 @@ void complete_v2_state_transition(struct ike_sa *ike,
 		 * re-transmits have something that can respond.
 		 */
 		/* send the response */
-		dbg_v2_msgid(ike, "finishing old exchange (STF_OK_RESPONDER_DELETE_IKE)");
-		pexpect(transition->recv_role == MESSAGE_REQUEST);
-		pexpect(transition->send_role == MESSAGE_RESPONSE);
+		dbg_v2_msgid(ike, "finishing old exchange (STF_OK_DELETE_IKE_FAMILY); and maybe sending message");
 		v2_msgid_finish(ike, md);
-		send_recorded_v2_message(ike, "DELETE_IKE_FAMILY", MESSAGE_RESPONSE);
-		/* do the deed */
-		on_delete(&ike->sa, skip_send_delete);
-		connection_delete_ike_family(&ike, HERE);
-		pexpect(ike == NULL);
-		return;
-
-	case STF_OK_INITIATOR_DELETE_IKE:
-		/*
-		 * Initiator processing response, finish current
-		 * exchange and then delete the IKE SA.
-		 */
-		dbg_v2_msgid(ike, "finishing old exchange (STF_OK_INITIATOR_DELETE_IKE)");
-		pexpect(transition->recv_role == MESSAGE_RESPONSE);
-		v2_msgid_finish(ike, md);
+		switch (transition->send_role) {
+		case MESSAGE_REQUEST:
+			/*
+			 * Assume this is a misconfigured state
+			 * transition - the code just received a
+			 * response telling the IKE SA to
+			 * self-destruct.
+			 *
+			 * Code wanting to both initiate an exchange
+			 * and delete the IKE SA leaving the responder
+			 * hanging should be using terminate, or
+			 * STF_OK_INITIATE_...
+			 */
+			PEXPECT(ike->sa.logger, transition->recv_role == MESSAGE_RESPONSE);
+			break;
+		case MESSAGE_RESPONSE:
+			PEXPECT(ike->sa.logger, transition->recv_role == MESSAGE_REQUEST);
+			send_recorded_v2_message(ike, "DELETE_IKE_FAMILY",
+						 transition->send_role);
+			break;
+		case NO_MESSAGE:
+			break;
+		}
 		/* do the deed */
 		on_delete(&ike->sa, skip_send_delete);
 		connection_delete_ike_family(&ike, HERE);
