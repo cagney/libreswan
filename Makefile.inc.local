@@ -1,0 +1,26 @@
+KVM_FEDORA=true
+KVM_FEDORA_SOURCEDIR=$(KVM_RUTDIR)/v4
+KVM_FEDORA_MAKEFLAGS = WERROR_CFLAGS=
+
+# everything below this isn't relevant
+
+KVM_TEST_STATUS += wip
+
+#KVM_NETBSD=true
+#KVM_OPENBSD=true
+#KVM_FREEBSD=true
+#KVM_DEBIAN=true
+#KVM_UBUNTU=true
+KVM_FEDORA=true
+#KVM_ALPINE=true
+
+KVM_LOCALDIR=/tmp/pool
+
+KVM_RUN_POST_MORTEM = true
+
+#KVM_SOURCEDIR=$(abspath ../wip-misc)
+#KVM_TESTINGDIR=$(abspath ../mainline/testing)
+#KVM_NSS_RPMDIR = /source/nss/
+#KVM_NSS_VERSION = -3.60.1-1.fc32_lsw1.x86_64.rpm
+#KVM_NSS_PACKAGES = $(addsuffix $(addprefix $(NSS_PACKAGE_NAMES),/source/nss/),-3.60.1-1.fc32_lsw1.x86_64.rpm)
+
