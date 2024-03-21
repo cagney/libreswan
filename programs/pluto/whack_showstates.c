@@ -247,8 +247,19 @@ static void show_state(struct show *s, struct state *st, const monotime_t now)
 			jam(buf, " nodpd;");
 		}
 
-		if (st->st_offloaded_task != NULL &&
-		    !st->st_offloaded_task_in_background) {
+		/*
+		 * This isn't sufficient, there are other fields that
+		 * indicate that there's an offloaded task; for
+		 * instance PAM and XAUTH.
+		 */
+		bool have_jobs = false;
+		FOR_EACH_ELEMENT(job, st->st_offloaded_tasks) {
+			if (*job != NULL) {
+				have_jobs = true;
+				break;
+			}
+		}
+		if (have_jobs && !st->st_offloaded_task_in_background) {
 			jam(buf, " crypto_calculating;");
 		} else {
 			jam(buf, " idle;");

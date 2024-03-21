@@ -88,6 +88,7 @@ struct job {
 	job_id_t job_id;
 	helper_id_t helper_id;
 	struct cpu_usage time_used;
+	unsigned slot;
 
 	/* where to send messages */
 	struct logger *logger;
@@ -281,6 +282,47 @@ static void inline_worker(const char *story UNUSED, struct state *unused_st UNUS
 }
 
 /*
+ * Select the slot (initiator:0, responder:1) to store the job in.
+ */
+
+static unsigned job_slot(struct msg_digest *md)
+{
+	if (md == NULL) {
+		/*
+		 * Initiator starting or continuing with building a
+		 * new request (new exchanges have no message).
+		 *
+		 * Note that this also includes crypto during IKE_AUTH
+		 * (and the IKEv1 equivalent) but that doesn't have
+		 * any conflicts so SA_INITIATOR is good enough.
+		 */
+		return 0;
+	}
+
+	if (hdr_ike_version(&md->hdr) < IKEv2) {
+		/*
+		 * IKEv1 uses the Child SA for exchanges so things are
+		 * kept largely independent.
+		 */
+		return 0; /* arbitrary; could return 0 */
+	}
+
+	if (v2_msg_role(md) == MESSAGE_RESPONSE) {
+		/*
+		 * Initiator resuming an exiting exchange (MD contains
+		 * the response).
+		 */
+		return 0;
+	}
+
+	/*
+	 * IKEv2 responder processing initiator's request; assign a
+	 * separate slot.
+	 */
+	return 1;
+}
+
+/*
  * send_crypto_helper_request is called with a request to do some
  * cryptographic operations along with a continuation structure,
  * which will be used to deal with the response.
@@ -324,13 +366,6 @@ void submit_task(struct state *callback_sa,
 		 const struct task_handler *handler,
 		 where_t where)
 {
-	if (callback_sa->st_offloaded_task != NULL) {
-		llog_pexpect(callback_sa->logger, where,
-			     "state already has outstanding crypto ["PRI_WHERE"]",
-			     pri_where(callback_sa->st_offloaded_task->where));
-		return;
-	}
-
 	struct job *job = alloc_thing(struct job, where->func);
 	dbg_alloc("job", job, HERE);
 	job->cancelled = false;
@@ -353,7 +388,11 @@ void submit_task(struct state *callback_sa,
 	/*
 	 * Save in case it needs to be cancelled.
 	 */
-	callback_sa->st_offloaded_task = job;
+	job->slot = job_slot(md);
+	PASSERT(callback_sa->logger, job->slot < elemsof(callback_sa->st_offloaded_tasks));
+	if (PEXPECT(callback_sa->logger, callback_sa->st_offloaded_tasks[job->slot] == NULL)) {
+		callback_sa->st_offloaded_tasks[job->slot] = job;
+	}
 	callback_sa->st_offloaded_task_in_background = false;
 	job->logger = clone_logger(task_sa->logger, HERE);
 	job->md = md_addref(md);
@@ -405,14 +444,24 @@ void delete_cryptographic_continuation(struct state *st)
 {
 	passert(in_main_thread());
 	passert(st->st_serialno != SOS_NOBODY);
-	struct job *job = st->st_offloaded_task;
-	if (job == NULL) {
-		return;
+	FOR_EACH_ELEMENT(job, st->st_offloaded_tasks) {
+		if ((*job) != NULL) {
+			/*
+			 * Flag job as dead but leave it in the
+			 * backlog queue (avoiding need to lock).
+			 * When a helper thread reaches a canceled job
+			 * it sends it back to the main thread for
+			 * cleanup.
+			 *
+			 * Should the cancel happen while the job is
+			 * being processed then cleanup happens after
+			 * the job has finished (i.e., don't try to
+			 * interrupt the task, it isn't worth it).
+			 */
+			(*job)->cancelled = true;
+			(*job) = NULL;
+		}
 	}
-	/* shut it down */
-	job->cancelled = true;
-	st->st_offloaded_task = NULL;
-	/* thread pool will throw the task back for cleanup */
 }
 
 /*
@@ -450,7 +499,7 @@ static stf_status handle_helper_answer(struct state *st,
 	if (job->cancelled) {
 		/* suppressed */
 		ldbg(job->logger, PRI_JOB": job cancelled!", pri_job(job));
-		pexpect(st == NULL || st->st_offloaded_task == NULL);
+		pexpect(st == NULL || st->st_offloaded_tasks[job->slot] == NULL);
 		status = STF_SKIP_COMPLETE_STATE_TRANSITION;
 	} else if (st == NULL) {
 		/* oops, the state disappeared! */
@@ -458,8 +507,8 @@ static stf_status handle_helper_answer(struct state *st,
 		status = STF_SKIP_COMPLETE_STATE_TRANSITION;
 	} else {
 		ldbg(job->logger, PRI_JOB": calling state's callback function", pri_job(job));
-		pexpect(st->st_offloaded_task == job);
-		st->st_offloaded_task = NULL;
+		pexpect(st->st_offloaded_tasks[job->slot] == job);
+		st->st_offloaded_tasks[job->slot] = NULL;
 		st->st_offloaded_task_in_background = false;
 		/* bill the thread time */
 		cpu_usage_add(st->st_timing.helper_usage, job->time_used);

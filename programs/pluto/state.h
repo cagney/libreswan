@@ -595,7 +595,7 @@ struct state {
 	 *
 	 * IKEv2 has similar complexity with fragments.
 	 */
-	struct job *st_offloaded_task;
+	struct job *st_offloaded_tasks[2]; /* space for initiator:0 and responder:1 */
 	bool st_offloaded_task_in_background;
 	struct msg_digest *st_v1_background_md;	/* arrived during background task */
 

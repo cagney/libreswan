@@ -1816,23 +1816,33 @@ bool state_is_busy(const struct state *st)
 	}
 
 	/*
-	 * If IKEv1 is doing something in the background then the
-	 * state isn't busy.
+	 * Any tasks running?
 	 */
+
+	bool has_task = false;
+	FOR_EACH_ELEMENT(job, st->st_offloaded_tasks) {
+		if ((*job) != NULL) {
+			has_task = true;
+			break;
+		}
+	}
+
 	if (st->st_offloaded_task_in_background) {
-		pexpect(st->st_offloaded_task != NULL);
+		pexpect(has_task);
 		dbg("#%lu is idle; has background offloaded task",
 		    st->st_serialno);
 		return false;
 	}
+
 	/*
 	 * If this state is busy calculating.
 	 */
-	if (st->st_offloaded_task != NULL) {
+	if (has_task) {
 		dbg("#%lu is busy; has an offloaded task",
 		    st->st_serialno);
 		return true;
 	}
+
 	dbg("#%lu is idle", st->st_serialno);
 	return false;
 }
