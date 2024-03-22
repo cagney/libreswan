@@ -1368,7 +1368,7 @@ static bool record_outbound_fragments(const struct pbs_out *body,
 static stf_status record_v2SK_message(struct pbs_out *msg,
 				      struct v2SK_payload *sk,
 				      const char *what,
-				      enum message_role message)
+				      enum message_role message_role)
 {
 	size_t len = pbs_out_all(msg).len;
 
@@ -1385,7 +1385,8 @@ static stf_status record_v2SK_message(struct pbs_out *msg,
 	if (sk->ike->sa.st_iface_endpoint->io->protocol == &ip_protocol_udp &&
 	    sk->ike->sa.st_v2_ike_fragmentation_enabled &&
 	    len >= endpoint_type(&sk->ike->sa.st_remote_endpoint)->ikev2_max_fragment_size) {
-		struct v2_outgoing_fragment **frags = &sk->ike->sa.st_v2_outgoing[message];
+		struct v2_msgid_window *window = v2_msgid_window(sk->ike, message_role);
+		struct v2_outgoing_fragment **frags = &window->outgoing_fragments;
 		if (!record_outbound_fragments(msg, sk, what, frags)) {
 			dbg("record outbound fragments failed");
 			return STF_INTERNAL_ERROR;
@@ -1397,7 +1398,7 @@ static stf_status record_v2SK_message(struct pbs_out *msg,
 			return STF_INTERNAL_ERROR;
 		}
 		dbg("recording outgoing fragment failed");
-		record_v2_message(sk->ike, msg, what, message);
+		record_v2_message(sk->ike, msg, what, message_role);
 	}
 	return STF_OK;
 }

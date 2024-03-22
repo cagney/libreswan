@@ -89,9 +89,10 @@ void record_v2_outgoing_fragment(struct pbs_out *pbs,
 void record_v2_message(struct ike_sa *ike,
 		       struct pbs_out *msg,
 		       const char *what,
-		       enum message_role message)
+		       enum message_role message_role)
 {
-	struct v2_outgoing_fragment **frags = &ike->sa.st_v2_outgoing[message];
+	struct v2_msgid_window *window = v2_msgid_window(ike, message_role);
+	struct v2_outgoing_fragment **frags = &window->outgoing_fragments;
 	free_v2_outgoing_fragments(frags);
 	record_v2_outgoing_fragment(msg, what, frags);
 }
@@ -531,10 +532,8 @@ void free_v2_incoming_fragments(struct v2_incoming_fragments **frags)
 
 void free_v2_message_queues(struct state *st)
 {
-	FOR_EACH_ELEMENT(fragments, st->st_v2_outgoing) {
-		free_v2_outgoing_fragments(fragments);
-	}
 	FOR_EACH_THING(window, &st->st_v2_msgid_windows.initiator, &st->st_v2_msgid_windows.responder) {
 		free_v2_incoming_fragments(&window->incoming_fragments);
+		free_v2_outgoing_fragments(&window->outgoing_fragments);
 	}
 }
