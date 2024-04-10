@@ -1315,22 +1315,10 @@ void v2_dispatch(struct ike_sa *ike, struct msg_digest *md,
 	 * ID window)?  For something like CREATE_CHILD_SA, it
 	 * contains contain the work-in-progress Child SA.
 	 */
-	so_serial_t old_ike = ike->sa.st_serialno;
 	statetime_t start = statetime_start(&ike->sa);
 	stf_status e = svm->processor(ike, NULL/*child*/, md);
+	complete_v2_state_transition(ike, md, e);
 	/* danger: IKE may not be valid */
-
-	if (e == STF_SKIP_COMPLETE_STATE_TRANSITION) {
-		/*
-		 * Danger! Processor did something dodgy like free the
-		 * IKE SA!
-		 */
-		dbg("processor '%s' for #%lu suppressed complete st_v2_transition",
-		    svm->story, old_ike);
-	} else {
-		complete_v2_state_transition(ike, md, e);
-	}
-
 	statetime_stop(&start, "processing: %s in %s()", svm->story, __func__);
 	/* our caller with md_delref(mdp) */
 }
@@ -1713,8 +1701,8 @@ void complete_v2_state_transition(struct ike_sa *ike,
 	switch (result) {
 
 	case STF_SKIP_COMPLETE_STATE_TRANSITION:
-		/* should never get here */
-		bad_case(result);
+		/* no-op */
+		return;
 
 	case STF_SUSPEND:
 		/*
@@ -1902,18 +1890,10 @@ static void reinitiate_v2_ike_sa_init(const char *story, struct state *st, void 
 		ike->sa.st_iface_endpoint = p;
 	}
 
-	so_serial_t old_st = st->st_serialno;
 	statetime_t start = statetime_start(st);
 	stf_status e = resume(ike);
-	if (e == STF_SKIP_COMPLETE_STATE_TRANSITION) {
-		/*
-		 * Danger! Processor did something dodgy like free ST!
-		 */
-		dbg("processor '%s' for #%lu suppressed complete st_v2_transition",
-		    story, old_st);
-	} else {
-		complete_v2_state_transition(ike, NULL, e);
-	}
+	complete_v2_state_transition(ike, NULL, e);
+	/* Danger!  IKE may not be valid */
 	statetime_stop(&start, "processing: %s in %s()", story, __func__);
 }
 

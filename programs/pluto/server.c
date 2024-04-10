@@ -597,22 +597,6 @@ struct resume_event {
 	struct msg_digest *md;
 };
 
-void complete_state_transition(struct state *st, struct msg_digest *md, stf_status status)
-{
-	switch (st->st_ike_version) {
-#ifdef USE_IKEv1
-	case IKEv1:
-		complete_v1_state_transition(st, md, status);
-		break;
-#endif
-	case IKEv2:
-		complete_v2_state_transition(pexpect_ike_sa(st), md, status);
-		break;
-	default:
-		bad_case(st->st_ike_version);
-	}
-}
-
 static void resume_handler(void *arg, const struct timer_event *event)
 {
 	struct resume_event *e = (struct resume_event *)arg;
@@ -652,19 +636,19 @@ static void resume_handler(void *arg, const struct timer_event *event)
 		stf_status status = e->callback(st, e->md, e->context);
 		/* this may trash ST and/or MD.ST */
 
-		if (status == STF_SKIP_COMPLETE_STATE_TRANSITION) {
-			/* MD.ST may have been freed! */
-			ldbg(event->logger,
-			     "resume %s for #%lu suppressed complete_v%d_state_transition()%s",
-			     e->name, e->serialno, ike_version,
-			     (old_md_st != SOS_NOBODY && e->md->v1_st == NULL ? "; MD.ST disappeared" :
-			      old_md_st != SOS_NOBODY && e->md->v1_st != st ? "; MD.ST was switched" :
-			      ""));
-		} else {
-			/* XXX: mumble something about struct ike_version */
-			switch (ike_version) {
+		/* XXX: mumble something about struct ike_version */
+		switch (ike_version) {
 #ifdef USE_IKEv1
-			case IKEv1:
+		case IKEv1:
+			if (status == STF_SKIP_COMPLETE_STATE_TRANSITION) {
+				/* MD.ST may have been freed! */
+				ldbg(event->logger,
+				     "resume %s for #%lu suppressed complete_v%d_state_transition()%s",
+				     e->name, e->serialno, ike_version,
+				     (old_md_st != SOS_NOBODY && e->md->v1_st == NULL ? "; MD.ST disappeared" :
+				      old_md_st != SOS_NOBODY && e->md->v1_st != st ? "; MD.ST was switched" :
+				      ""));
+			} else {
 				/* no switching MD.ST */
 				if (old_md_st == SOS_NOBODY) {
 					/* (old)md->v1_st == (new)md->v1_st == NULL */
@@ -676,14 +660,13 @@ static void resume_handler(void *arg, const struct timer_event *event)
 						e->md->v1_st->st_serialno == old_md_st);
 				}
 				pexpect(st != NULL); /* see above */
-				break;
-#endif
-			case IKEv2:
-				break;
-			default:
-				bad_case(ike_version);
+				complete_v1_state_transition(st, e->md, status);
 			}
-			complete_state_transition(st, e->md, status);
+			break;
+#endif
+		case IKEv2:
+			complete_v2_state_transition(pexpect_ike_sa(st), e->md, status);
+			break;
 		}
 		statetime_stop(&start, "resume %s", e->name);
 	}

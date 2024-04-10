@@ -46,6 +46,8 @@
 #include "pluto_timing.h"
 #include "show.h"
 #include "connections.h"
+#include "ikev1.h"		/* for complete_v1_state_transition() */
+#include "ikev2.h"		/* for complete_v2_state_transition() */
 
 #define PID_MAGIC 0x000f000cUL
 
@@ -317,12 +319,18 @@ void server_fork_sigchld_handler(struct logger *logger)
 				stf_status ret = pid_entry->callback(st, pid_entry->md, status,
 								     pid_entry->context,
 								     pid_entry->logger);
-				if (ret == STF_SKIP_COMPLETE_STATE_TRANSITION) {
-					/* MD.ST may have been freed! */
-					dbg("resume %s for #%lu skipped complete_v%d_state_transition()",
-					    pid_entry->name, pid_entry->serialno, ike_version);
-				} else {
-					complete_state_transition(st, pid_entry->md, ret);
+				switch (ike_version) {
+				case IKEv1:
+					if (ret == STF_SKIP_COMPLETE_STATE_TRANSITION) {
+						dbg("resume %s for #%lu skipped complete_v%d_state_transition()",
+						    pid_entry->name, pid_entry->serialno, ike_version);
+					} else {
+						complete_v1_state_transition(st, pid_entry->md, ret);
+					}
+					break;
+				case IKEv2:
+					complete_v2_state_transition(pexpect_ike_sa(st), pid_entry->md, ret);
+					break;
 				}
 				statetime_stop(&start, "callback for %s",
 					       pid_entry->name);
