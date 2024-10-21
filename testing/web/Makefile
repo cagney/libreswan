@@ -138,29 +138,27 @@ $(WEB_SUMMARYDIR)/commits.json: $(WEB_COMMITSDIR)/$(WEB_HASH).json $(wildcard $(
 #
 
 .PHONY: web-resultsdir
-web-resultsdir:
-
 web-resultsdir: $(WEB_RESULTSDIR)/index.html
-web-resultsdir: $(WEB_RESULTSDIR)/lsw-summary-graph.css
-web-resultsdir: $(WEB_RESULTSDIR)/lsw-table.css
-web-resultsdir: $(WEB_RESULTSDIR)/results.css
 web-resultsdir: $(WEB_RESULTSDIR)/tsconfig.json
-web-resultsdir: $(WEB_RESULTSDIR)/favicon.ico
+web-resultsdir: $(wildcard $(WEB_SUMMARYDIR)/*/index.html)
+web-resultsdir: $(wildcard $(WEB_SUMMARYDIR)/*/tsconfig.json)
+
+$(WEB_SUMMARYDIR)/%/index.html: results.html \
+		lsw-summary-graph.css lsw-table.css results.css favicon.ico \
+		| $(WEB_SUMMARYDIR)/%/
+	cp $? $(WEB_SUMMARYDIR)/$*
+	mv $(WEB_SUMMARYDIR)/$*/results.html $(WEB_SUMMARYDIR)/$*/index.html
+
+$(WEB_SUMMARYDIR)/%/: | $(WEB_SUMMARYDIR)
+	mkdir $(WEB_SUMMARYDIR)/$*
+
+#
+# generate json
+#
 
 web-results-json: $(WEB_RESULTSDIR)/results.json
 web-results-json: $(WEB_RESULTSDIR)/summary.json
 
-$(WEB_RESULTSDIR)/index.html: results.html | $(WEB_RESULTSDIR)
-	cp $< $@
-
-$(WEB_RESULTSDIR)/%.css: %.css | $(WEB_RESULTSDIR)
-	cp $< $@
-
-$(WEB_RESULTSDIR)/favicon.ico: favicon.ico | $(WEB_RESULTSDIR)
-	cp $< $@
-
-$(WEB_RESULTSDIR): | $(WEB_SUMMARYDIR)
-	mkdir $(WEB_RESULTSDIR)
 
 #
 # Create the tests directory
@@ -208,7 +206,7 @@ $(WEB_RESULTSDIR)/summary.json: | $(WEB_RESULTSDIR)
 # hack to compile json code
 #
 
-%/tsconfig.json: tsconfig.json.in $(wildcard *.js *.tc) | %
+%/tsconfig.json: tsconfig.json.in $(wildcard *.js *.tc) | %/
 	sed \
 		-e 's;@@DEST_DIR@@;$(realpath $(dir $@));' \
 		-e 's;@@SOURCE_DIR@@;$(abs_srcdir);'\
