@@ -126,7 +126,7 @@ function lsw_summary_table(table_id, summary) {
 		     + row.directory
 		     + "</a>")
 	    if (row == summary.current) {
-		a += "<br/>" + summary.current.details
+		a += "<br/>" + summary.status.details
 	    }
 	    return a
 	},
