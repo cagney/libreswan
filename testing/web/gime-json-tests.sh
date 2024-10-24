@@ -39,5 +39,5 @@ done
 # list of all tests
 find ${testsdir} -name '*.tmp' -print | while read results ; do
     test=$(basename ${results} .tmp)
-    echo '{ "test": "'"${test}"'" }'
+    printf '"%s"' "${test}"
 done | jq -s > ${testsdir}/tests.json

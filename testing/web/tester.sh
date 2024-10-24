@@ -416,4 +416,10 @@ find ${summarydir} \
      -type f -name '*.log.gz' -mtime +14 -print0 | \
     xargs -0 --no-run-if-empty rm -v
 
+# Updating tests/
+
+STATUS "updating tests/ directory (slow)"
+
+RUN ${bindir}/gime-json-tests.sh ${summarydir}
+
 RESTART "run complete"
