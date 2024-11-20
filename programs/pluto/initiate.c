@@ -328,15 +328,22 @@ void initiate(struct connection *c,
 	 * either: established; or negotiating the IKE SA as the
 	 * initiator.
 	 *
-	 * What is wrong with a larval responder?
-
+	 * However, when replacing, never try to re-use an existing
+	 * IKE SA - it defeats the presumed point of the replace - to
+	 * re-authenticate.
+	 *
 	 * Possible outcomes are: no IKE SA, so initiate a new one; IKE
 	 * SA is a larval initiator, so append connection to pending;
 	 * IKE SA is established, so append Child SA to IKE's exchange
 	 * queue.
+	 *
+	 * What is wrong with a larval responder?  It can leave the
+	 * connection in limbo waiting for the larval IKE SA to
+	 * timeout because the peer failed.
 	 */
 
-	struct ike_sa *ike = find_viable_parent_for_connection(c);
+	struct ike_sa *ike = (initiated_by == INITIATED_BY_REPLACE ? NULL :
+			      find_viable_parent_for_connection(c));
 
 	/*
 	 * There's no viable IKE (parent) SA, initiate a new one.

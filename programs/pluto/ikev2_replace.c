@@ -181,42 +181,60 @@ void ikev2_replace(struct state *st, bool detach_whack)
 	 */
 	threadtime_t inception = threadtime_start();
 
-	if (IS_IKE_SA(st)) {
-		/*
-		 * Should this call capture_child_rekey_policy(st) or
-		 * child_sa_policy(c) to capture the Child SA's
-		 * policy?
-		 *
-		 * Probably not.
-		 *
-		 * When the IKE (ISAKMP) SA initiator code sees
-		 * policy=LEMPTY it skips scheduling the connection as
-		 * a Child SA to be initiated once the IKE SA
-		 * establishes.  Instead the revival code will
-		 * schedule the connection as a child.
-		 */
-		struct connection *c = st->st_connection;
-		const struct child_policy policy = {0};
-		if (IS_IKE_SA_ESTABLISHED(st)) {
-			log_state(RC_LOG, st, "initiate reauthentication of IKE SA");
-		}
-		initiate_v2_IKE_SA_INIT_request(c, st, &policy, &inception,
-						HUNK_AS_SHUNK(c->child.sec_label),
-						detach_whack);
+	/*
+	 * For a Child SA, start from policy in (ipsec) state, not
+	 * connection.  This ensures that rekeying doesn't downgrade
+	 * security.  I admit that this doesn't capture everything.
+	 *
+	 * For IKE SA, don't try to capture the Child's policy:
+	 *
+	 * When the IKE (ISAKMP) SA initiator code sees policy=LEMPTY
+	 * it will skip putting the the connection on the pending
+	 * queue as a Child SA to be initiated once the IKE SA
+	 * establishes.  Instead the revival code will schedule the
+	 * connection!?!
+	 */
+	struct child_policy policy = (IS_CHILD_SA(st) ? capture_child_rekey_policy(st) :
+				      (struct child_policy) {0});
 
-	} else {
+	/*
+	 * When establishing the IKE SA, include the configured
+	 * SEC_LABEL; but not when replacing the Child.
+	 *
+	 * Why?
+	 *
+	 * XXX: Suspect it is a convoluted UNUSED variable:
+	 *
+	 * In IKEv2, the sec_label is negotiated when establishing
+	 * Child SA, not IKE.
+	 *
+	 * The negotiated Child SA's SEC_LABEL ends up in the Child
+	 * SA's connection, not the IKE SA, hence the above SEC_LABEL
+	 * should be empty.
+	 *
+	 * Child SAs with a SEC_LABEL replace the parent not the
+	 * Child, i.e., they should not call this function.
+	 *
+	 * Since the IKE SA has no child POLICY, the SA is assumed to
+	 * be childless.
+	 *
+	 * Lets find out.
+	 */
 
-		/*
-		 * Start from policy in (ipsec) state, not connection.
-		 * This ensures that rekeying doesn't downgrade
-		 * security.  I admit that this doesn't capture
-		 * everything.
-		 */
-		const struct child_policy policy = capture_child_rekey_policy(st);
-		initiate(st->st_connection, &policy, st->st_serialno, &inception,
-			 null_shunk, detach_whack, st->logger,
-			 INITIATED_BY_REPLACE, HERE);
-	}
+	struct connection *c = st->st_connection;
+	shunk_t sec_label = (IS_IKE_SA(st) ? HUNK_AS_SHUNK(c->child.sec_label) :
+			     null_shunk);
+	PEXPECT(st->logger, sec_label.len == 0);
+
+	/*
+	 * For initiate(), INITIATED_BY_REPLACE means never try to
+	 * re-use an existing IKE SA.  But that's the point - the code
+	 * is trying to force a re-authentication of the current SA by
+	 * establishing a new IKE SA.
+	 */
+	initiate(c, &policy, st->st_serialno, &inception,
+		 sec_label, detach_whack, st->logger,
+		 INITIATED_BY_REPLACE, HERE);
 }
 
 void event_v2_replace(struct state *st, bool detach_whack)
