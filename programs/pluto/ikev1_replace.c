@@ -47,49 +47,26 @@
 
 void ikev1_replace(struct state *st)
 {
+	bool detach_whack = false; /* presumably no whack */
+
 	/*
 	 * start billing the new state.  The old state also gets
 	 * billed for this function call, oops.
 	 */
 	threadtime_t inception = threadtime_start();
 
-	if (IS_IKE_SA(st)) {
-		/*
-		 * Should this call capture_child_rekey_policy(st) or
-		 * child_sa_policy(c) to capture the Child SA's
-		 * policy?
-		 *
-		 * Probably not.
-		 *
-		 * When the IKE (ISAKMP) SA initiator code sees
-		 * policy=LEMPTY it skips scheduling the connection as
-		 * a Child SA to be initiated once the IKE SA
-		 * establishes.  Instead the revival code will
-		 * schedule the connection as a child.
-		 */
-		const struct child_policy policy = {0};
-		struct connection *c = st->st_connection;
-		struct ike_sa *predecessor = pexpect_ike_sa(st);
-		if (c->config->aggressive) {
-			aggr_outI1(c, predecessor, &policy, &inception, /*background?*/false);
-		} else {
-			main_outI1(c, predecessor, &policy, &inception, /*background?*/false);
-		}
+	/*
+	 * Start from policy in (ipsec) state, not connection.  This
+	 * ensures that rekeying doesn't downgrade security.  I admit
+	 * that this doesn't capture everything.
+	 */
+	const struct child_policy policy =
+		(IS_CHILD_SA(st) ? capture_child_rekey_policy(st) :
+		 (struct child_policy) {0});
 
-	} else {
-
-		/*
-		 * Start from policy in (ipsec) state, not connection.
-		 * This ensures that rekeying doesn't downgrade
-		 * security.  I admit that this doesn't capture
-		 * everything.
-		 */
-		const struct child_policy policy = capture_child_rekey_policy(st);
-		passert(has_child_policy(&policy));
-		initiate(st->st_connection, &policy, st->st_serialno, &inception,
-			 null_shunk, /*background?*/false, st->logger,
-			 INITIATED_BY_REPLACE, HERE);
-	}
+	initiate(st->st_connection, &policy, st->st_serialno, &inception,
+		 null_shunk, detach_whack, st->logger,
+		 INITIATED_BY_REPLACE, HERE);
 }
 
 void event_v1_replace(struct state *st, monotime_t now)
