@@ -1,0 +1,5 @@
+ikev1 east with wide and narrow conn; west uses narrow
+
+east initially matches wide, but then, upon the arival
+of narrow, switches (but can it).
+
