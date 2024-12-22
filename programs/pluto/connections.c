@@ -2506,7 +2506,7 @@ static diag_t extract_connection(const struct whack_message *wm,
 	}
 
 	/*
-	 * Unpack and verify the ends.
+	 * Unpack and verify the host ends
 	 */
 
 	bool same_ca[END_ROOF] = { false, };
@@ -2524,6 +2524,17 @@ static diag_t extract_connection(const struct whack_message *wm,
 		if (d != NULL) {
 			return d;
 		}
+	}
+
+	/*
+	 * Update addresses based on peer.
+	 *
+	 * Can this and above be merged since host_addr[] is
+	 * pre-determined?
+	 */
+
+	FOR_EACH_THING(end, LEFT_END, RIGHT_END) {
+		update_hosts_from_end_host_addr(c, end, host_addr[end], HERE); /* from add */
 	}
 
 	/*
@@ -3859,10 +3870,6 @@ static diag_t extract_connection(const struct whack_message *wm,
 		}
 		llog(RC_LOG, c->logger, "opportunistic: %s", str_diag(d));
 		pfree_diag(&d);
-	}
-
-	FOR_EACH_THING(end, LEFT_END, RIGHT_END) {
-		update_hosts_from_end_host_addr(c, end, host_addr[end], HERE); /* from add */
 	}
 
 	/*
