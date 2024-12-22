@@ -2197,6 +2197,7 @@ static diag_t extract_lifetime(deltatime_t *lifetime,
 static enum connection_kind extract_connection_end_kind(const struct whack_message *wm,
 							const struct whack_end *this,
 							const struct whack_end *that,
+							const struct id *that_id,
 							struct logger *logger)
 {
 	if (is_group_wm(wm)) {
@@ -2232,6 +2233,12 @@ static enum connection_kind extract_connection_end_kind(const struct whack_messa
 	    that->protoport.has_port_wildcard) {
 		ldbg(logger, "%s connection is CK_TEMPLATE: %s child has protoport wildcard port",
 		     this->leftright, that->leftright);
+		return CK_TEMPLATE;
+	}
+	if (id_has_wildcards(that_id)) {
+		id_buf idb;
+		ldbg(logger, "%s connection is CK_TEMPLATE: %s host has wildcard ID %s",
+		     this->leftright, that->leftright, str_id(that_id, &idb));
 		return CK_TEMPLATE;
 	}
 	FOR_EACH_THING(we, this, that) {
@@ -2577,6 +2584,8 @@ static diag_t extract_connection(const struct whack_message *wm,
 			extract_connection_end_kind(wm,
 						    whack_ends[this],
 						    whack_ends[that],
+						    /* hack! */
+						    &c->end[that].host.id,
 						    c->logger);
 	}
 
