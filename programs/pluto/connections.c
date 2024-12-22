@@ -2538,6 +2538,33 @@ static diag_t extract_connection(const struct whack_message *wm,
 	}
 
 	/*
+	 * Update the ID using the HOST's addr determined above, but
+	 * only when it is known, i.e., not NO_IP/unset -- WildCard).
+	 *
+	 * XXX: the ID needs to be known before the connection's kind
+	 * can be set.
+	 */
+	FOR_EACH_THING(lr, LEFT_END, RIGHT_END) {
+		struct host_end *end = &c->end[lr].host;
+		if (end->id.kind != ID_NONE) {
+			continue;
+		}
+		if (!host_addr[lr].is_set) {
+			continue;
+		}
+		struct id id = {
+			.kind = host_afi->id_ip_addr,
+			.ip_addr = host_addr[lr],
+		};
+		id_buf old, new;
+		dbg("  updated %s.id from %s to %s",
+		    end->config->leftright,
+		    str_id(&end->id, &old),
+		    str_id(&id, &new));
+		end->id = id;
+	}
+
+	/*
 	 * Determine the connection KIND from the wm.
 	 *
 	 * Save it in a local variable so code can use that (and be
