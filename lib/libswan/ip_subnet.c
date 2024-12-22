@@ -24,6 +24,7 @@
 #include "ip_info.h"
 
 const ip_subnet unset_subnet; /* all zeros */
+const ip_subnet unspec_subnet = { .is_set = true, };
 
 ip_subnet subnet_from_raw(where_t where,
 			  const struct ip_info *afi,
@@ -197,6 +198,10 @@ size_t jam_subnet(struct jambuf *buf, const ip_subnet *subnet)
 		return jam_string(buf, "<unset-subnet>");
 	}
 
+	if (afi == &unspec_info) {
+		return jam_string(buf, "%any");
+	}
+
 	size_t s = 0;
 	ip_address sa = subnet_prefix(*subnet);
 	s += jam_address(buf, &sa); /* sensitive? */
@@ -234,40 +239,47 @@ void pexpect_subnet(const ip_subnet *s, where_t where)
 		return;
 	}
 
-	if (s->is_set == false ||
-	    s->version == 0) {
-		llog_pexpect(&global_logger, where, "invalid subnet: "PRI_SUBNET, pri_subnet(s));
+	if (!PEXPECT_WHERE(&global_logger, where, s->is_set)) {
+		return;
 	}
+
 }
 
 bool subnet_eq_subnet(const ip_subnet l, const ip_subnet r)
 {
-	if (subnet_is_unset(&l) && subnet_is_unset(&r)) {
+	const struct ip_info *afi = subnet_info(l);
+	if (afi != subnet_info(r)) {
+		return false;
+	}
+
+	if (afi == NULL) {
 		/* NULL/unset subnets are equal */
 		return true;
 	}
 
-	if (subnet_is_unset(&l) || subnet_is_unset(&r)) {
-		return false;
-	}
-
 	/* must compare individual fields */
-	return (l.version == r.version &&
-		thingeq(l.bytes, r.bytes) &&
+	return (thingeq(l.bytes, r.bytes) &&
 		l.maskbits == r.maskbits);
 }
 
 bool subnet_eq_address(const ip_subnet subnet, const ip_address address)
 {
 	const struct ip_info *afi = subnet_info(subnet);
+	if (afi != address_info(address)) {
+		return false;
+	}
+
 	if (afi == NULL) {
 		return false;
 	}
 
+	if (afi == &unspec_info) {
+		return true;
+	}
+
 	/* XXX: reject any? */
 	/* must compare individual fields */
-	return (subnet.version == address.version &&
-		thingeq(subnet.bytes, address.bytes) &&
+	return (thingeq(subnet.bytes, address.bytes) &&
 		subnet.maskbits == afi->mask_cnt);
 }
 

@@ -44,9 +44,9 @@ typedef struct {
 		(A).prefix_len
 
 void pexpect_cidr(const ip_cidr a, where_t where);
-#define pcidr(A) pexpect_cidr(A, HERE)
 
 extern const ip_cidr unset_cidr;
+extern const ip_cidr unspec_cidr;
 
 /* convert CIDR address/mask; does not judge the result */
 ip_cidr cidr_from_raw(where_t where, const struct ip_info *afi,

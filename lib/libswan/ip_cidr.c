@@ -23,6 +23,7 @@
 #include "ip_info.h"
 
 const ip_cidr unset_cidr;
+const ip_cidr unspec_cidr = { .is_set = true, };
 
 ip_cidr cidr_from_raw(where_t where,
 		      const struct ip_info *afi,
@@ -185,6 +186,10 @@ size_t jam_cidr(struct jambuf *buf, const ip_cidr *cidr)
 		return jam_string(buf, "<unset-cidr>");
 	}
 
+	if (ip_is_unspec(cidr)) {
+		return jam_string(buf, "%any");
+	}
+
 	size_t s = 0;
 	ip_address sa = cidr_address(*cidr);
 	s += jam_address(buf, &sa); /* sensitive? */
@@ -209,18 +214,18 @@ void pexpect_cidr(const ip_cidr cidr, where_t where)
 
 bool cidr_eq_cidr(const ip_cidr l, const ip_cidr r)
 {
-	bool l_set = cidr_is_specified(l);
-	bool r_set = cidr_is_specified(r);
+	const struct ip_info *afi = cidr_info(l);
 
-	if (! l_set && ! r_set) {
-		/* unset/NULL addresses are equal */
-		return true;
-	}
-	if (! l_set || ! r_set) {
+	if (afi != cidr_info(r)) {
 		return false;
 	}
+
+	if (afi == NULL) {
+		/* unset/NULL cidr are equal */
+		return true;
+	}
+
 	/* must compare individual fields */
-	return (l.version == r.version &&
-			l.prefix_len == r.prefix_len &&
+	return (l.prefix_len == r.prefix_len &&
 		thingeq(l.bytes, r.bytes));
 }

@@ -39,7 +39,6 @@ typedef struct {
 		pri_ip_bytes((R)->hi)
 
 void pexpect_range(const ip_range *r, where_t where);
-#define prange(R) pexpect_range(R, HERE)
 
 /* caller knows best */
 ip_range range_from_raw(where_t where, const struct ip_info *afi,
@@ -95,8 +94,9 @@ const char *str_range(const ip_range *range, range_buf *buf);
  */
 
 extern const ip_range unset_range;
+extern const ip_range unspec_range;
 
-bool range_is_unset(const ip_range *r);			/* handles NULL */
+#define range_is_unset(R) is_unset(R)			/* handles NULL */
 const struct ip_info *range_type(const ip_range *r);	/* handles NULL */
 const struct ip_info *range_info(const ip_range r);
 

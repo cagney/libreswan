@@ -76,7 +76,6 @@ typedef struct {
 		(S)->hport
 
 void pexpect_selector(const ip_selector *s, where_t where);
-#define pselector(S) pexpect_selector(S, HERE)
 
 ip_selector selector_from_raw(where_t where, const struct ip_info *afi,
 			      const struct ip_bytes lo,
@@ -144,8 +143,9 @@ size_t jam_selectors(struct jambuf *buf, const ip_selectors selectors);
  */
 
 extern const ip_selector unset_selector;
+extern const ip_selector unspec_selector;
 
-bool selector_is_unset(const ip_selector *selector);			/* handles NULL */
+#define selector_is_unset(S) is_unset(S)				/* handles NULL */
 const struct ip_info *selector_type(const ip_selector *selector);	/* handles NULL */
 const struct ip_info *selector_info(const ip_selector selector);
 

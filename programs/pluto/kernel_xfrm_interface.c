@@ -695,7 +695,7 @@ static bool xfrm_ipsec_interface_has_cidr(const char *ipsec_if_name,
 	struct nl_ifaddrmsg_req req = init_ifaddrmsg_req(RTM_GETADDR,
 							 (NLM_F_DUMP | NLM_F_REQUEST),
 							 ipsec_if_name,
-							 &unspec_ip_info);
+							 &unspec_info);
 
 
 	if (!linux_netlink_query(&req.n, NETLINK_ROUTE,

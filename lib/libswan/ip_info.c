@@ -24,8 +24,18 @@
 #include "passert.h"
 #include "lswlog.h"		/* for bad_case() */
 
-const struct ip_info unspec_ip_info = {
+static size_t jam_unspec_address(struct jambuf *buf,
+				 const struct ip_info *afi UNUSED,
+				 const struct ip_bytes *bytes UNUSED)
+{
+	return jam_string(buf, "%any");
+}
+
+const struct ip_info unspec_info = {
 	.af = AF_UNSPEC,
+	.ip_name = "unspec",
+	.jam.address = jam_unspec_address,
+	.jam.address_wrapped = jam_unspec_address,
 };
 
 /*
@@ -282,7 +292,7 @@ const struct ip_info *aftoinfo(int af)
 const struct ip_info *ip_version_info(enum ip_version version)
 {
 	static const struct ip_info *ip_types[] = {
-		[0] = NULL,
+		[0] = &unspec_info,
 		[IPv4] = &ipv4_info,
 		[IPv6] = &ipv6_info,
 	};

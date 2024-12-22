@@ -20,15 +20,7 @@
 #include "ip_info.h"
 
 const ip_selector unset_selector;
-
-bool selector_is_unset(const ip_selector *selector)
-{
-	if (selector == NULL) {
-		return true;
-	}
-
-	return !selector->is_set;
-}
+const ip_selector unspec_selector = { .is_set = true, };
 
 bool selector_is_zero(const ip_selector selector)
 {
@@ -621,10 +613,10 @@ void pexpect_selector(const ip_selector *s, where_t where)
 		return;
 	}
 
-	if (s->is_set == false ||
-	    s->version == 0) {
-		llog_pexpect(&global_logger, where, "invalid selector: "PRI_SELECTOR, pri_selector(s));
+	if (!PEXPECT_WHERE(&global_logger, where, s->is_set)) {
+		return;
 	}
+
 }
 
 int selector_hport(const ip_selector s)

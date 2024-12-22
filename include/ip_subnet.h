@@ -62,7 +62,6 @@ typedef struct {
 		(S)->maskbits
 
 void pexpect_subnet(const ip_subnet *s, where_t where);
-#define psubnet(S) pexpect_subnet(S, HERE)
 
 /*
  * Constructors
@@ -106,6 +105,7 @@ extern size_t jam_subnet(struct jambuf *buf, const ip_subnet *subnet);
  */
 
 extern const ip_subnet unset_subnet;
+extern const ip_subnet unspec_subnet;
 
 bool subnet_is_unset(const ip_subnet *subnet);			/* handles NULL */
 const struct ip_info *subnet_type(const ip_subnet *subnet);	/* handles NULL */

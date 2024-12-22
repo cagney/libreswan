@@ -1185,7 +1185,7 @@ stf_status quick_inI1_outR1(struct state *ike_sa, struct msg_digest *md)
 
 	const struct ip_info *client_afi = selector_info(remote_client);
 	if (client_afi == NULL) {
-		client_afi = &unspec_ip_info;
+		client_afi = &unspec_info;
 	}
 
 	selector_buf csb;

@@ -24,6 +24,7 @@
 #include "lswlog.h"		/* for bad_case() */
 
 const ip_endpoint unset_endpoint; /* all zeros */
+const ip_endpoint unspec_endpoint = { .is_set = true, };
 
 ip_endpoint endpoint_from_raw(where_t where,
 			      const struct ip_info *afi,
@@ -105,7 +106,7 @@ ip_endpoint set_endpoint_port(const ip_endpoint endpoint, ip_port port)
 
 	ip_endpoint dst = endpoint;
 	dst.hport = hport(port);
-	pendpoint(&dst);
+	pexpect_endpoint(&dst, HERE);
 	return dst;
 }
 
@@ -127,14 +128,6 @@ const struct ip_info *endpoint_info(const ip_endpoint endpoint)
 
 	/* may return NULL */
 	return ip_version_info(endpoint.version);
-}
-
-bool endpoint_is_unset(const ip_endpoint *endpoint)
-{
-	if (endpoint == NULL) {
-		return true;
-	}
-	return !endpoint->is_set;
 }
 
 const struct ip_protocol *endpoint_protocol(const ip_endpoint endpoint)
@@ -178,6 +171,10 @@ size_t jam_endpoint(struct jambuf *buf, const ip_endpoint *endpoint)
 	const struct ip_info *afi = endpoint_type(endpoint);
 	if (afi == NULL) {
 		return jam_string(buf, "<unset-endpoint>");
+	}
+
+	if (ip_is_unspec(endpoint)) {
+		return jam_string(buf, "%any");
 	}
 
 	size_t s = 0;

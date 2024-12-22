@@ -57,7 +57,6 @@ typedef struct {
 		(S)->dst.hport
 
 void pexpect_packet(const ip_packet *s, where_t where);
-#define ppacket(S) pexpect_packet(S, HERE)
 
 ip_packet packet_from_raw(where_t where,
 			  /* AFI determines meaning of ... */

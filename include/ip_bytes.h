@@ -94,6 +94,35 @@ int ip_bytes_cmp(enum ip_version l_version, const struct ip_bytes l_bytes,
 
 bool ip_bytes_is_zero(const struct ip_bytes *bytes);
 
+#define ip_is_set(IP)				\
+	({					\
+		typeof(IP) ip_ = (IP);		\
+		ip_ != NULL && ip_->is_set;	\
+	})
+
+#define ip_is_unset(IP)				\
+	({					\
+		typeof(IP) ip_ = (IP);		\
+		ip_ == NULL && !ip_->is_set;	\
+	})
+
+#define ip_is_unspec(IP)			\
+	({					\
+		typeof(IP) ip_ = (IP);		\
+		(ip_ != NULL &&			\
+		 ip_->is_set &&			\
+		 ip_->version == 0);		\
+	})
+
+#define ip_is_specified(IP)				\
+	({						\
+		typeof(IP) ip_ = (IP);			\
+		(ip_ != NULL &&				\
+		 ip_->is_set &&				\
+		 ip_->version != 0 &&			\
+		 !thingeq(ip_->bytes, unset_ip_bytes));	\
+	})
+
 #define IP_INFO_UNSET(IP)			\
 	(IP == NULL ? "null" :			\
 	 !IP->is_set ? "unset" :		\

@@ -70,7 +70,6 @@ typedef struct {
 		pri_ip_bytes((A)->bytes)
 
 void pexpect_address(const ip_address *a, where_t where);
-#define paddress(A) pexpect_address(A, HERE)
 
 /*
  * Constructors.
@@ -166,8 +165,9 @@ const char *str_address_reversed(const ip_address *src, address_reversed_buf *bu
  */
 
 extern const ip_address unset_address;
+extern const ip_address unspec_address;
 
-bool address_is_unset(const ip_address *address);		/* handles NULL */
+#define address_is_unset(A) is_unset(A)				/* handles NULL */
 const struct ip_info *address_type(const ip_address *address);	/* handles NULL */
 
 const struct ip_info *address_info(const ip_address address);

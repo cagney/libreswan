@@ -65,7 +65,6 @@ typedef struct {
 		(A)->hport
 
 void pexpect_endpoint(const ip_endpoint *e, where_t where);
-#define pendpoint(E) pexpect_endpoint(E, HERE)
 
 /*
  * Constructors.
@@ -129,8 +128,9 @@ const char *str_endpoint_pair(const ip_endpoint *src, const ip_endpoint *dst,
  */
 
 extern const ip_endpoint unset_endpoint;
+extern const ip_endpoint unspec_endpoint;
 
-bool endpoint_is_unset(const ip_endpoint *endpoint);			/* handles NULL */
+#define endpoint_is_unset(E) is_unset(E)				/* handles NULL */
 const struct ip_info *endpoint_type(const ip_endpoint *endpoint);	/* handles NULL */
 const struct ip_info *endpoint_info(const ip_endpoint endpoint);
 

@@ -24,6 +24,7 @@
 #include "ip_info.h"
 
 const ip_address unset_address; /* all zeros */
+const ip_address unspec_address = { .is_set = true, };
 
 ip_address address_from_raw(where_t where,
 			    const struct ip_info *afi,
@@ -209,15 +210,6 @@ const char *str_address_reversed(const ip_address *src,
 	return dst->buf;
 }
 
-bool address_is_unset(const ip_address *address)
-{
-	if (address == NULL) {
-		return true;
-	}
-	return !address->is_set;
-}
-
-
 bool address_is_specified(const ip_address address)
 {
 	const struct ip_info *afi = address_info(address);
@@ -225,8 +217,8 @@ bool address_is_specified(const ip_address address)
 		return false;
 	}
 
-	/* exclude any address */
-	if (address_eq_address(address, afi->address.unspec)) {
+	/* this covers both unspec_address and the zero address */
+	if (thingeq(address.bytes, unset_ip_bytes)) {
 		return false;
 	}
 
@@ -269,8 +261,7 @@ void pexpect_address(const ip_address *a, where_t where)
 		return;
 	}
 
-	if (a->is_set == false ||
-	    a->version == 0) {
-		llog_pexpect(&global_logger, where, "invalid address: "PRI_ADDRESS, pri_address(a));
+	if (!PEXPECT_WHERE(&global_logger, where, a->is_set)) {
+		return;
 	}
 }

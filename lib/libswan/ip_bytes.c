@@ -272,6 +272,10 @@ size_t jam_ip_bytes_range(struct jambuf *buf,
 			  const struct ip_bytes lo,
 			  const struct ip_bytes hi)
 {
+	if (afi == &unspec_info) {
+		return jam_string(buf, "%any");
+	}
+
 	int prefix_len = ip_bytes_prefix_len(afi, lo, hi);
 	size_t s = 0;
 	if (prefix_len >= 0) {

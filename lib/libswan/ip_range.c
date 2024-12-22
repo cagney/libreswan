@@ -31,6 +31,7 @@
 #include "lswlog.h"		/* for pexpect() */
 
 const ip_range unset_range; /* all zeros */
+const ip_range unspec_range = { .is_set = true, };
 
 ip_range range_from_raw(where_t where, const struct ip_info *afi,
 			const struct ip_bytes lo,
@@ -141,15 +142,6 @@ const struct ip_info *range_info(const ip_range range)
 	return ip_version_info(range.version);
 }
 
-bool range_is_unset(const ip_range *range)
-{
-	if (range == NULL) {
-		return true;
-	}
-
-	return !range->is_set;
-}
-
 bool range_is_zero(const ip_range range)
 {
 	const struct ip_info *afi = range_info(range);
@@ -184,6 +176,10 @@ uintmax_t range_size(const ip_range range)
 {
 	const struct ip_info *afi = range_info(range);
 	if (afi == NULL) {
+		return 0;
+	}
+
+	if (afi == &unspec_info) {
 		return 0;
 	}
 
@@ -435,9 +431,8 @@ void pexpect_range(const ip_range *r, where_t where)
 		return;
 	}
 
-	if (r->is_set == false ||
-	    r->version == 0 ||
-	    ip_bytes_cmp(r->version, r->lo, r->version, r->hi) > 0) {
-		llog_pexpect(&global_logger, where, "invalid range: "PRI_RANGE, pri_range(r));
+	if (!PEXPECT_WHERE(&global_logger, where, r->is_set)) {
+		return;
 	}
+
 }
