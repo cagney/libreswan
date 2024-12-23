@@ -558,6 +558,8 @@ static bool child_has_client(struct ike_sa *ike, struct child_sa *child)
 		pdbg(child->sa.logger, "has_client: " #P);	\
 		return true;					\
 	}
+	HAS_CLIENT(c->local->config->child.selectors.len > 0);
+	HAS_CLIENT(c->remote->config->child.selectors.len > 0);
 	HAS_CLIENT(c->local->child.has_client);
 	HAS_CLIENT(c->remote->child.has_client);
 	HAS_CLIENT(c->spd->local->client.ipproto != 0);
@@ -1012,6 +1014,12 @@ stf_status quick_inI1_outR1(struct state *ike_sa, struct msg_digest *md)
 
 		local_client = selector_from_address(c->local->host.addr);
 		remote_client = selector_from_address(c->remote->host.addr);
+
+		selector_buf lcb, rcb;
+		vdbg("local %s and remote %s clients implicitly set from host",
+		     str_selector(&local_client, &lcb),
+		     str_selector(&remote_client, &rcb));
+
 	}
 
 	struct hidden_variables hv;
