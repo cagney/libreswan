@@ -84,7 +84,11 @@ static struct connection *duplicate_connection(const char *name, struct connecti
 		 * instance.  Should selector code setting up SPDs
 		 * instead handle this.
 		 */
+#if 0
 		bool has_client = t->end[end].child.has_client;
+#else
+		bool has_client = (t->end[end].child.config->selectors.len > 0);
+#endif
 		set_end_child_has_client(c, end, has_client);
 		PEXPECT(t->logger, (has_client == (t->end[end].child.config->selectors.len > 0)));
 	}

@@ -1833,9 +1833,11 @@ void add_proposals(struct connection *d, const struct ip_info *host_afi,
 			vdbg("%s selectors from %d child.selectors",
 			     leftright, end->child.config->selectors.len);
 			end->child.selectors.proposed = end->child.config->selectors;
+#if 0
 			/* XXX: instantiate() doesn't do this */
 			/* see also clone_connection */
 			set_end_child_has_client(d, end->config->index, true);
+#endif
 			continue;
 		}
 
