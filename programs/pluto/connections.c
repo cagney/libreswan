@@ -625,6 +625,7 @@ void update_hosts_from_end_host_addr(struct connection *c,
 {
 	struct host_end *host = &c->end[end].host;
 	struct host_end *other_host = &c->end[!end].host;
+	const char *leftright = host->config->leftright;
 
 	address_buf hab;
 	ldbg(c->logger, "updating host ends from %s.host.addr %s",
@@ -641,23 +642,36 @@ void update_hosts_from_end_host_addr(struct connection *c,
 	host->first_addr = host_addr;
 
 	/*
-	 * Update the %any ID to HOST_ADDR, but only when it set to a
-	 * proper address, i.e., is set and not %any aka 0.0.0 --
-	 * WildCard.
 	 */
-	if (address_is_specified(host_addr) &&
-	    host->id.kind == ID_NONE) {
-		struct id id = {
+
+	free_id_content(&host->id);
+	if (host->config->id.kind == ID_NONE &&
+	    address_is_specified(host_addr)) {
+		/*
+		 * Update the %any ID to HOST_ADDR, but only when it
+		 * set to a proper address, i.e., is set and not %any
+		 * aka 0.0.0 -- WildCard.
+		 *
+		 * XXX: is it really id=%any, or was id= omitted?
+		 */
+		host->id = (struct id) {
 			.kind = afi->id_ip_addr,
 			.ip_addr = host->addr,
 		};
-		id_buf hid, cid, nid;
-		dbg("  updated %s.id from %s (config=%s) to %s",
-		    host->config->leftright,
-		    str_id(&host->id, &hid),
-		    str_id(&host->config->id, &cid),
-		    str_id(&id, &nid));
-		host->id = id;
+		id_buf hid;
+		ldbg(c->logger, "setting %s-id to '%s' as host->config->id=NONE and address is specified",
+		     leftright, str_id(&host->id, &hid));
+	} else if (host->config->id.kind == ID_FROMCERT &&
+		   host->config->cert.nss_cert != NULL) {
+		host->id = id_from_cert(&host->config->cert);
+		id_buf hid;
+		ldbg(c->logger, "setting %s-id to '%s' as host->config->id=%%fromcert",
+		     leftright, str_id(&host->id, &hid));
+	} else {
+		id_buf hid;
+		host->id = clone_id(&host->config->id, __func__);
+		ldbg(c->logger, "setting %s-id to '%s' as host->config->id)",
+		     leftright, str_id(&host->id, &hid));
 	}
 
 	/*
@@ -1131,19 +1145,6 @@ static diag_t extract_host_end(struct host_end *host,
 		if (d != NULL) {
 			return d;
 		}
-	}
-
-	if (host_config->id.kind == ID_FROMCERT &&
-	    host_config->cert.nss_cert != NULL) {
-		host->id = id_from_cert(&host_config->cert);
-		id_buf idb;
-		ldbg(logger, "setting %s-id to '%s' as host->config->id=%%fromcert",
-		     leftright, str_id(&host->id, &idb));
-	} else {
-		id_buf idb;
-		ldbg(logger, "setting %s-id to '%s' as host->config->id)",
-		     leftright, str_id(&host_config->id, &idb));
-		host->id = clone_id(&host_config->id, __func__);
 	}
 
 	/* the rest is simple copying of corresponding fields */
@@ -2513,8 +2514,7 @@ static diag_t extract_connection(const struct whack_message *wm,
 	FOR_EACH_THING(this, LEFT_END, RIGHT_END) {
 		diag_t d;
 		int that = (this + 1) % END_ROOF;
-		d = extract_host_end(&c->end[this].host,
-				     &config->end[this].host,
+		d = extract_host_end(&config->end[this].host,
 				     &config->end[that].host,
 				     wm,
 				     whack_ends[this],
