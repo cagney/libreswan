@@ -281,6 +281,138 @@ def set_cert_extensions(cert, issuer, isCA=False, isRoot=False, ocsp=False, ocsp
     if '-crlOmit' not in cnstr:
         add_ext(cert, 'crlDistributionPoints', False, CRL_URI)
 
+def add_cert_extensions(cabuilder, cert_CN, issuer_CN=None,
+                        isCA=False, isRoot=False, ocsp=False, ocspuri=True):
+    ocspeku = 'serverAuth,clientAuth,codeSigning,OCSPSigning'
+
+    # Create Basic Constraints
+    if isCA:
+        if "badca" in issuer_CN:
+            bc = False
+        else:
+            bc = True
+    else:
+        bc = False
+
+    if 'bcOmit' not in cert_CN:
+        cf = False
+        if 'bcCritical' in cert_CN:
+            cf = True
+        cabuilder = cabuilder.add_extension(
+            x509.BasicConstraints(ca=bc, path_length=None),
+            critical=False,
+        )
+
+    # delete this
+    # cabuilder.add_extension(
+    #     x509.KeyUsage(
+    #         digital_signature=True,
+    #         content_commitment=False,
+    #         key_encipherment=False,
+    #         data_encipherment=False,
+    #         key_agreement=False,
+    #         key_cert_sign=True,
+    #         crl_sign=True,
+    #         encipher_only=False,
+    #         decipher_only=False,
+    #     ),
+    #     critical=True,
+    # ).add_extension(
+    #     x509.SubjectKeyIdentifier.from_public_key(root_key.public_key()),
+    #     critical=False,
+    # )
+
+    # # Create Subject Alt Name (SAN)
+    # if not isCA and '-nosan' not in cert_CN:
+    #     SAN = "DNS: " + CN
+    #     if "." in cert_CN:
+    #         ee = CN.split(".")[0]
+    #         print("EE:%s"% ee)
+    #         if ee == "west" or ee == "east" or ee == "semiroad":
+    #             SAN += ", email:%s@testing.libreswan.org"%ee
+    #             if ee == "west":
+    #                 SAN += ", IP:192.1.2.45, IP:2001:db8:1:2::45"
+    #             if ee == "east":
+    #                 SAN += ", IP:192.1.2.23, IP:2001:db8:1:2::23"
+    #             if ee == "semiroad":
+    #                 SAN += ", IP:192.1.3.209, IP:2001:db8:1:3::209"
+    #         if ee == "otherwest" or ee == "othereast":
+    #             SAN += ", email:%s@other.libreswan.org"%ee
+    #     if 'sanCritical' in cert_CN:
+    #         add_ext(cert, 'subjectAltName', True, SAN)
+    #     else:
+    #         add_ext(cert, 'subjectAltName', False, SAN)
+
+
+    # # Create Key Usage (KU)
+    # ku_str = 'digitalSignature'
+    # if isCA or ocsp:
+    #     ku_str = 'digitalSignature,keyCertSign,cRLSign'
+    # # check for custom Key Usage
+    # if '-ku-' in cert_CN:
+    #     ku_str = ''
+    #     for ku_entry in valid_ku_list:
+    #         if ku_entry in cert_CN:
+    #             ku_str = ku_str + "," + ku_entry
+    #     if 'kuBOGUS' in cert_CN:
+    #         ku_str = ku_str + ",1.3.6.1.5.5.42.42.42" # bogus OID
+    # if 'kuEmpty' in cert_CN:
+    #     ku_str = ''
+    # if '-kuOmit' not in cert_CN:
+    #     cf = False
+    #     if 'kuCritical' in cert_CN:
+    #         cf = True
+    #     if ku_str != '' and ku_str[0] == ',':
+    #         ku_str = ku_str[1:]
+    #     add_ext(cert, 'keyUsage', cf, ku_str)
+
+    # # Create Extended Key Usage (KU)
+    # eku_str = 'serverAuth,clientAuth' # arbitrary default most often used in the wild
+    # # check for custom Key Usage
+    # if '-eku-' in cert_CN:
+    #     eku_str = ''
+    #     for eku_entry in valid_eku_list:
+    #         if eku_entry in cert_CN:
+    #             eku_str = eku_str + "," + eku_entry
+    #     # some informal names mapping to non-openssl supported OIDs
+    #     if '-ipsecEndSystem' in cert_CN:
+    #         eku_str = eku_str + ",1.3.6.1.5.5.7.3.5"
+    #     if '-ipsecTunnel' in cert_CN:
+    #         eku_str = eku_str + ",1.3.6.1.5.5.7.3.6"
+    #     if '-ipsecUser' in cert_CN:
+    #         eku_str = eku_str + ",1.3.6.1.5.5.7.3.7"
+    #     if '-ipsecIKE' in cert_CN:
+    #         eku_str = eku_str + ",1.3.6.1.5.5.7.3.17"
+    #     if '-iKEIntermediate' in cert_CN:
+    #         eku_str = eku_str + ",1.3.6.1.5.5.8.2.2"
+    #     if '-iKEEnd' in cert_CN:
+    #         eku_str = eku_str + ",1.3.6.1.5.5.8.2.1"
+    #     if '-ekuBOGUS' in cert_CN:
+    #         eku_str = eku_str + ",'1.3.6.1.5.5.42.42.42'" # bogus OID
+    # if ocsp:
+    #     eku_str = ocspeku
+    # if 'ekuEmpty' in cert_CN:
+    #     eku_str = ''
+    # if '-ekuOmit' not in cert_CN:
+    #     cf = False
+    #     if 'ekuCritical' in cert_CN:
+    #         cf = True
+    #     if eku_str != '' and eku_str[0] == ',':
+    #         eku_str = eku_str[1:]
+    #     add_ext(cert, 'extendedKeyUsage', cf, eku_str)
+
+    # # Create OCSP
+    # if ocspuri and '-ocspOmit' not in cert_CN:
+    #         add_ext(cert, 'authorityInfoAccess', False,
+    #               'OCSP;URI:http://nic.testing.libreswan.org:2560')
+
+    # # Create CRL DP
+    # if '-crlOmit' not in cert_CN:
+    #     add_ext(cert, 'crlDistributionPoints', False, CRL_URI)
+
+    return cabuilder
+
+
 def create_sub_cert(CN, cacert, cakey, snum, START, END,
                     C='CA', ST='Ontario', L='Toronto',
                     O='Libreswan', OU='Test Department',
@@ -317,9 +449,10 @@ def create_sub_cert(CN, cacert, cakey, snum, START, END,
     return cert.to_cryptography(), certkey
 
 
+GMCFMT="%Y%m%d%H%M%SZ"
+
 def gmc(timestamp):
-    return time.strftime("%Y%m%d%H%M%SZ",
-                         time.gmtime(timestamp))
+    return time.strftime(GMCFMT, time.gmtime(timestamp))
 
 
 def gen_gmtime_dates():
