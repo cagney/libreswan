@@ -487,6 +487,7 @@ void visit_connection_states(struct connection *c,
 		     pri_so(child->sa.st_serialno));
 		visited_child = CONNECTION_IKE_CHILD;
 		visit_connection_state(c, &ike, &child, visited_child, context);
+		/* DANGER: IKE may have been NULL-ed */
 	} else if (c->established_ike_sa != SOS_NOBODY) {
 		/*
 		 * i.e., the connection's Child SA is not using the
@@ -537,8 +538,8 @@ void visit_connection_states(struct connection *c,
 			.where = where,
 		},
 	};
-	unsigned nr_parents = 0;
-	unsigned nr_children = 0;
+	unsigned nr_lurking_ike = 0;
+	unsigned nr_lurking_child = 0;
 	while (next_state(&weed)) {
 		struct verbose verbose = weed.search.verbose;
 
@@ -563,29 +564,33 @@ void visit_connection_states(struct connection *c,
 		if (IS_PARENT_SA(weed.st)) {
 			vdbg("dispatch lurking IKE SA to "PRI_SO,
 			     pri_so(weed.st->st_serialno));
-			struct ike_sa *lingering_ike = pexpect_ike_sa(weed.st);
-			visit_connection_state(c, &lingering_ike, NULL, CONNECTION_LURKING_IKE, context);
-			nr_parents++;
+			struct ike_sa *lurking_ike = pexpect_ike_sa(weed.st);
+			visit_connection_state(c, &lurking_ike, NULL, CONNECTION_LURKING_IKE, context);
+			nr_lurking_ike++;
 			continue;
 		}
 
 		vdbg("dispatch lurking Child SA to "PRI_SO,
 		     pri_so(weed.st->st_serialno));
-		struct child_sa *lingering_child = pexpect_child_sa(weed.st);
-		/* may not have IKE as parent? */
-		nr_children++;
-		visit_connection_state(c, NULL, &lingering_child, CONNECTION_LURKING_CHILD, context);
+		struct child_sa *lurking_child = pexpect_child_sa(weed.st);
+		/* may not have IKE as parent */
+		visit_connection_state(c, NULL, &lurking_child, CONNECTION_LURKING_CHILD, context);
+		nr_lurking_child++;
 	}
 
-	vdbg("weeded %u parents and %u children", nr_parents, nr_children);
+	vdbg("weeded %u IKE SAs and %u Child SAs",
+	     nr_lurking_ike, nr_lurking_child);
 
 	/*
 	 * Now go through any remaining children.
 	 *
 	 * This could include children of the first IKE SA that are
 	 * been replaced.
+	 *
+	 * Note: call above may have NULL'd IKE.
 	 */
 
+	unsigned nr_ike_child_siblings = 0;
 	if (ike != NULL) {
 		vdbg("poking siblings");
 		struct state_filter child_filter = {
@@ -596,7 +601,6 @@ void visit_connection_states(struct connection *c,
 				.where = where,
 			},
 		};
-		unsigned nr = 0;
 		while (next_state(&child_filter)) {
 			struct verbose verbose = child_filter.search.verbose;
 
@@ -605,10 +609,10 @@ void visit_connection_states(struct connection *c,
 			vdbg("dispatching to sibling Child SA "PRI_STATE,
 			     pri_state(&child->sa, &sb));
 			visit_connection_state(c, &ike, &child, CONNECTION_CHILD_SIBLING, context);
-			nr++;
+			nr_ike_child_siblings++;
 		}
-		vdbg("poked %u siblings", nr);
 	}
+	vdbg("poked %u IKE child siblings", nr_ike_child_siblings);
 
 	/*
 	 * With everything cleaned up decide what to do with the IKE
@@ -619,6 +623,7 @@ void visit_connection_states(struct connection *c,
 		vdbg("dispatch to IKE SA "PRI_SO" as child skipped",
 		     pri_so(ike->sa.st_serialno));
 		visit_connection_state(c, &ike, NULL, CONNECTION_CHILDLESS_IKE, context);
+		/* DANGER: IKE may have been NULL-ed */
 	}
 
 	if (ike != NULL) {
