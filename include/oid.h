@@ -8,14 +8,19 @@
  * Do not edit manually!
  */
 
-typedef struct {
+#ifndef OID_H
+#define OID_H
+
+#include <stdbool.h>
+
+struct oid {
 	unsigned char octet;
-	unsigned char down;	/* bool */
+	bool down;
 	unsigned short next;
 	const char *name;
-} oid_t;
+};
 
-extern const oid_t oid_names[];
+extern const struct oid oid_names[];
 
 #define OID_UNKNOWN			(-1)
 #define OID_ROLE			35
@@ -59,3 +64,5 @@ extern const oid_t oid_names[];
 #define OID_SHA256			141
 #define OID_SHA384			142
 #define OID_SHA512			143
+
+#endif

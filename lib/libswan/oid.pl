@@ -5,6 +5,7 @@
 # Copyright (C) 2003-2004 Andreas Steffen, Zuercher Hochschule Winterthur
 # Copyright (C) 2014 Tuomo Soini <tis@foobar.fi>
 # Copyright (C) 2014 D. Hugh Redelmeier <hugh@mimosa.com>
+# Copyright (C) 2025 Andrew Cagney
 #
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the
@@ -36,15 +37,21 @@ print OID_H "/*\n",
 	    " *\n",
 	    " * ", $automatic, "\n",
 	    " * ", $warning, "\n",
-	    " */\n\n",
-	    "typedef struct {\n",
+	    " */\n",
+	    "\n",
+	    "#ifndef OID_H\n",
+	    "#define OID_H\n",
+	    "\n",
+	    "#include <stdbool.h>\n",
+	    "\n",
+	    "struct oid {\n",
 	    "\tunsigned char octet;\n",
-	    "\tunsigned char down;\t/* bool */\n",
+	    "\tbool down;\n",
 	    "\tunsigned short next;\n",
 	    "\tconst char *name;\n",
-	    "} oid_t;\n",
+	    "};\n",
 	    "\n",
-            "extern const oid_t oid_names[];\n",
+            "extern const struct oid oid_names[];\n",
 	    "\n",
 	    "#define OID_UNKNOWN\t\t\t(-1)\n";
 
@@ -60,7 +67,7 @@ $max_order = 0;
 while ($line = <SRC>)
 {
     next if ($line =~ m/^\h*$/);	# ignore empty line
-    next if ($line =~ m/^#/);	# ignore comment line
+    next if ($line =~ m/^#/);		# ignore comment line
 
     $line =~ m/^( *?)(0x[0-9a-fA-F]{2})\s+(".*?")[ \t]*?([\w_]*?)\Z/
     	or die "malformed line: $line";
@@ -68,6 +75,7 @@ while ($line = <SRC>)
     @order[$counter] = length($1);
     @octet[$counter] = $2;
     @name[$counter] = $3;
+    @oid[$counter] = $4;
 
     if (length($1) > $max_order)
     {
@@ -85,6 +93,10 @@ while ($line = <SRC>)
 }
 
 close SRC;
+
+print OID_H "\n",
+    "#endif\n";
+
 close OID_H;
 
 # Generate oid.c
@@ -103,7 +115,7 @@ print OID_C "/*\n",
 	    " */\n",
 	    "#include \"oid.h\"\n",
 	    "\n",
-            "const oid_t oid_names[] = {\n",
+            "const struct oid oid_names[] = {\n",
 	    "\t/* octet, down, next, name */\n";
 
 for ($c = 0; $c < $counter; $c++)
@@ -119,11 +131,12 @@ for ($c = 0; $c < $counter; $c++)
 	}
     }
 
-    printf OID_C "\t{ %s%s,%s%d, %3d, %s%s }%s  /* %3d */\n"
+    printf OID_C "\t{ %s%s,%s%s,%s %3d, %s%s }%s  /* %3d */\n"
 	,' '  x @order[$c]
 	, @octet[$c]
 	, ' ' x (1 + $max_order - @order[$c])
-	, @order[$c+1] > @order[$c]
+	, @order[$c+1] > @order[$c] ? "true" : "false"
+	, @order[$c+1] > @order[$c] ? " "    : ""
 	, @next[$c]
 	, @name[$c]
 	, ' ' x ($max_name - length(@name[$c]))
