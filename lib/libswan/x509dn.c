@@ -318,8 +318,8 @@ static err_t format_dn(struct jambuf *buf, asn1_t dn,
 		 */
 
 		/* print OID */
-		int oid_code = known_oid(oid);
-		if (oid_code == OID_UNKNOWN) {
+		const struct oid *oid_code = known_oid(oid);
+		if (oid_code == NULL) {
 			/*
 			 * 2.4.  Converting an AttributeValue from
 			 * ASN.1 to a String
@@ -372,10 +372,10 @@ static err_t format_dn(struct jambuf *buf, asn1_t dn,
 				s += jam(buf, ".%ju", n);
 			}
 		} else {
-			s += jam_string(buf, oid_names[oid_code].name);
+			s += jam_string(buf, oid_code->name);
 		}
 		s += jam_string(buf, "=");
-		if (oid_code == OID_UNKNOWN ||
+		if (oid_code == NULL ||
 		    /*
 		     * NSS totally screws up a leading '#' - stripping
 		     * off the escape and then interpreting it as a
@@ -980,7 +980,7 @@ bool match_dn(asn1_t a, asn1_t b, int *wildcards, struct verbose verbose)
 
 		if ((value_type_a == ASN1_PRINTABLESTRING ||
 		     (value_type_a == ASN1_IA5STRING &&
-		      known_oid(oid_a) == OID_PKCS9_EMAIL)) &&
+		      known_oid(oid_a) == &oid_names[OID_PKCS9_EMAIL])) &&
 		    strncaseeq((char *)value_content_a.ptr,
 				(char *)value_content_b.ptr, value_content_b.len) &&
 		    memchr(value_content_a.ptr, '\0', a.len) == NULL)

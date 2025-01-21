@@ -28,10 +28,10 @@
 #include "oid.h"
 
 /*
- * If the oid is listed in the oid_names table then the corresponding
- * position in the oid_names table is returned otherwise -1 is returned
+ * If the oid is listed in the oid_names table then the entry in the
+ * OID_NAMES table is returned, else NULL.
  */
-int known_oid(asn1_t object)
+const struct oid *known_oid(asn1_t object)
 {
 	int oid = 0;
 
@@ -42,13 +42,13 @@ int known_oid(asn1_t object)
 			if (object.len == 0) {
 				/* at end of object */
 				if (oid_names[oid].down == 0)
-					return oid;	/* found terminal symbol */
+					return &oid_names[oid];	/* found terminal symbol */
 				else
-					return OID_UNKNOWN;	/* end of object but not terminal */
+					return NULL;	/* end of object but not terminal */
 			} else {
 				/* object continues */
 				if (oid_names[oid].down == 0) {
-					return OID_UNKNOWN;	/* terminal but not end of object */
+					return NULL;	/* terminal but not end of object */
 				} else {
 					/* advance to next hex octet in table
 					 * so we can match next octet of OID
@@ -60,10 +60,10 @@ int known_oid(asn1_t object)
 			if (oid_names[oid].next != 0)
 				oid = oid_names[oid].next;
 			else
-				return OID_UNKNOWN;
+				return NULL;
 		}
 	}
-	return OID_UNKNOWN;
+	return NULL;
 }
 
 /*
