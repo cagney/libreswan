@@ -86,7 +86,7 @@ typedef shunk_t asn1_t;
 		asn1_;							\
 	})
 
-int known_oid(asn1_t object);
+const struct oid *known_oid(asn1_t object);
 
 err_t asn1_ok(asn1_t blob);
 
