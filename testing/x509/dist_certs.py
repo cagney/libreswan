@@ -159,13 +159,13 @@ def create_csr(key, hash_alg=hashes.SHA256,
     """ Create the certreq
     """
     subjects = [
-        x509.NameAttribute(NameOID.COUNTRY_NAME, C),
-        x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, ST),
-        x509.NameAttribute(NameOID.LOCALITY_NAME, L),
-        x509.NameAttribute(NameOID.ORGANIZATION_NAME, O),
-        x509.NameAttribute(NameOID.ORGANIZATIONAL_UNIT_NAME, OU),
-        x509.NameAttribute(NameOID.COMMON_NAME, CN),
         x509.NameAttribute(NameOID.EMAIL_ADDRESS, emailAddress),
+        x509.NameAttribute(NameOID.COMMON_NAME, CN),
+        x509.NameAttribute(NameOID.ORGANIZATIONAL_UNIT_NAME, OU),
+        x509.NameAttribute(NameOID.ORGANIZATION_NAME, O),
+        x509.NameAttribute(NameOID.LOCALITY_NAME, L),
+        x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, ST),
+        x509.NameAttribute(NameOID.COUNTRY_NAME, C),
     ]
     csr = x509.CertificateSigningRequestBuilder() \
               .subject_name(x509.Name(subjects)) \
