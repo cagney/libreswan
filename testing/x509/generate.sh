@@ -162,9 +162,10 @@ generate_end_cert()
 (
     set -x
 
-    local certdir=$1 ; shift
-    local cert=$1 ; shift
+    local certdir=$(dirname $1)
+    local cert=$(basename $1)
     echo generating end certificate: ${certdir} ${cert} 1>&3
+    shift
 
     local rootname=$(basename ${certdir})
 
@@ -311,55 +312,17 @@ done
 
 # generate end certs where needed
 
-while read cert san ; do
-    for kind in real fake ; do
-	for root in mainca mainec ; do
-	    certdir=${OUTDIR}/${kind}/${root}
-	    log=${certdir}/${cert}.log
-	    if ! generate_end_cert ${certdir} ${cert} ${san} > ${log} 2>&1 ; then
-		cat ${log}
-		exit 1
-	    fi
-	done
-    done
-done <<EOF
-nic
-east
-west
-road
-north
-rise
-set
-EOF
 
-while read cert san ; do
-    for kind in real ; do
-	for root in otherca ; do
-	    certdir=${OUTDIR}/${kind}/${root}
-	    log=${certdir}/${cert}.log
-	    if ! generate_end_cert ${certdir} ${cert} ${san} > ${log} 2>&1 ; then
-		cat ${log}
-		exit 1
-	    fi
-	done
+while read certs ; do
+    for cert in $(eval echo ${certs}) ; do
+	log=${OUTDIR}/${cert}.log
+	if ! generate_end_cert ${OUTDIR}/${cert} ${san} > ${log} 2>&1 ; then
+	    cat ${log}
+	    exit 1
+	fi
     done
 done <<EOF
-othereast
-otherwest
-EOF
-
-while read cert san ; do
-    for kind in real ; do
-	for root in badca ; do
-	    certdir=${OUTDIR}/${kind}/${root}
-	    log=${certdir}/${cert}.log
-	    if ! generate_end_cert ${certdir} ${cert} ${san} > ${log} 2>&1 ; then
-		cat ${log}
-		exit 1
-	    fi
-	done
-    done
-done <<EOF
-badeast
-badwest
+{real,fake}/{mainca,mainec}/{nic,east,west,road,north,rise,set}
+real/otherca/other{east,west}
+real/badca/bad{east,west}
 EOF
