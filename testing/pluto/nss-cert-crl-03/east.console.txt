@@ -41,7 +41,7 @@ east #
  # Check that mainca is present
 east #
  ipsec crlutil -L | grep mainca
-Libreswan test CA for mainca - Libreswan CRL  
+mainca                                   CRL  
 east #
  # DANGER: race.
 east #
