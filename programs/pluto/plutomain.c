@@ -37,6 +37,7 @@
 #include <sys/un.h>
 #include <fcntl.h>
 #include <unistd.h>	/* for unlink(), write(), close(), access(), et.al. */
+#include <signal.h>
 
 #include "optarg.h"
 #include "deltatime.h"
@@ -1567,6 +1568,12 @@ int main(int argc, char **argv)
 		llog(RC_LOG, logger, "kernel: MIGRATE ipsec SA error: %s", msg);
 	else
 		llog(RC_LOG, logger, "kernel: MIGRATE SA supported by kernel");
+
+	/*
+	 * Ignore closed pipe writes; Linux doesn't support disabling
+	 * on a per-fd basis.
+	 */
+	signal(SIGPIPE, SIG_IGN);
 
 	run_server(conffile, logger);
 }
