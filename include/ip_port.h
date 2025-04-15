@@ -31,6 +31,11 @@
 
 struct jambuf;
 
+enum ip_hport {
+	IKE_UDP_PORT = 500,
+	NAT_IKE_UDP_PORT = 4500, /* RFC-3947 */
+};
+
 typedef struct {
 	/* be consistent with ip_base */
 	struct {
@@ -41,15 +46,15 @@ typedef struct {
 	 * XXX: 0 is interpreted as either 0, or any-port (is this a
 	 * good idea?); host-byte ordered.
 	 */
-	unsigned hport;
+	enum ip_hport hport:16;
 } ip_port;
 
 extern const ip_port unset_port; /* aka all ports? */
 
-ip_port ip_hport(unsigned hport);
+ip_port ip_hport(enum ip_hport hport);
 ip_port ip_nport(unsigned nport);
 
-unsigned hport(ip_port port);
+enum ip_hport hport(ip_port port);
 unsigned nport(ip_port port);
 
 bool port_is_specified(ip_port p);

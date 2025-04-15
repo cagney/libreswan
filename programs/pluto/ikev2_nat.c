@@ -58,12 +58,12 @@ bool ikev2_out_nat_v2n(struct pbs_out *outs, struct state *st,
 	};
 
 	/* if encapsulation=yes, force NAT-T detection by using wrong port for hash calc */
-	uint16_t lport = endpoint_hport(st->st_iface_endpoint->local_endpoint);
+	enum ip_hport local_hport = endpoint_hport(st->st_iface_endpoint->local_endpoint);
 	if (st->st_connection->config->encapsulation == YNA_YES) {
 		ldbg(st->logger, "NAT-T: encapsulation=yes, so mangling hash to force NAT-T detection");
-		lport = 0;
+		local_hport = 0;
 	}
-	ip_endpoint local_endpoint = set_endpoint_port(st->st_iface_endpoint->local_endpoint, ip_hport(lport));
+	ip_endpoint local_endpoint = set_endpoint_hport(st->st_iface_endpoint->local_endpoint, local_hport);
 	ip_endpoint remote_endpoint = st->st_remote_endpoint;
 	return ikev2_out_natd(&local_endpoint, &remote_endpoint,
 			      &ike_spis, outs);
@@ -176,7 +176,8 @@ bool v2_natify_initiator_endpoints(struct ike_sa *ike, where_t where)
 		 * :PLUTO_NAT_PORT should exist.  IPv6 nat isn't
 		 * supported.
 		 */
-		ip_endpoint new_local_endpoint = set_endpoint_port(ike->sa.st_iface_endpoint->local_endpoint, ip_hport(NAT_IKE_UDP_PORT));
+		ip_endpoint new_local_endpoint = set_endpoint_hport(ike->sa.st_iface_endpoint->local_endpoint,
+								    NAT_IKE_UDP_PORT);
 		/* returns new reference */
 		struct iface_endpoint *i =
 			find_iface_endpoint_by_local_endpoint(new_local_endpoint);
@@ -222,8 +223,8 @@ bool v2_natify_initiator_endpoints(struct ike_sa *ike, where_t where)
 	} else {
 		pexpect(remote_hport == IKE_UDP_PORT);
 		/* same address+protocol; change port */
-		ip_endpoint new_endpoint = set_endpoint_port(ike->sa.st_remote_endpoint,
-							     ip_hport(NAT_IKE_UDP_PORT));
+		ip_endpoint new_endpoint = set_endpoint_hport(ike->sa.st_remote_endpoint,
+							      NAT_IKE_UDP_PORT);
 		endpoint_buf oep, nep;
 		ldbg(ike->sa.logger,
 		     "NAT: "PRI_SO" floating remote port from %s to %s using NAT_IKE_UDP_PORT "PRI_WHERE,

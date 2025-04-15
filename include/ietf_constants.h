@@ -489,8 +489,6 @@
 /* RFC 2403 "HMAC-MD5-96" section 3 */
 #define HMAC_MD5_KEY_LEN MD5_DIGEST_SIZE	/* bytes */
 
-#define IKE_UDP_PORT 500
-#define NAT_IKE_UDP_PORT 4500 /* RFC-3947 */
 /* RFC3948: bytes of zeros, same size as ESP SPI */
 #define NON_ESP_MARKER_SIZE 4
 

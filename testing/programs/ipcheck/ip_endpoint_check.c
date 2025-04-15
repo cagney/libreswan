@@ -136,7 +136,7 @@ void ip_endpoint_check(void)
 		}
 
 		/* tweak the port numbers */
-		uint16_t hport_plus_one = t->hport+1;
+		enum ip_hport hport_plus_one = t->hport+1;
 		uint16_t nport_plus_one = ntohs(t->hport+1);
 		/* check math? handle carry; */
 		uint8_t nport_plus_plus[2];
@@ -149,7 +149,7 @@ void ip_endpoint_check(void)
 		}
 
 		/* hport+1 -> nport+1 */
-		ip_endpoint hp = set_endpoint_port(e, ip_hport(hport_plus_one));
+		ip_endpoint hp = set_endpoint_hport(e, hport_plus_one);
 		uint16_t nportp = nport(endpoint_port(hp));
 		if (!memeq(&nportp, &nport_plus_one, sizeof(nportp))) {
 			FAIL("endpoint_nport(set_endpoint_hport(+1)) returned '%04x', expected '%04x'",

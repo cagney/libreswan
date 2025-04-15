@@ -93,7 +93,7 @@ ip_port endpoint_port(const ip_endpoint endpoint)
 	return ip_hport(endpoint.hport);
 }
 
-ip_endpoint set_endpoint_port(const ip_endpoint endpoint, ip_port port)
+ip_endpoint set_endpoint_hport(const ip_endpoint endpoint, enum ip_hport hport)
 {
 	const struct ip_info *afi = endpoint_info(endpoint);
 	if (afi == NULL) {
@@ -104,7 +104,7 @@ ip_endpoint set_endpoint_port(const ip_endpoint endpoint, ip_port port)
 	}
 
 	ip_endpoint dst = endpoint;
-	dst.hport = hport(port);
+	dst.hport = hport;
 	pendpoint(&dst);
 	return dst;
 }

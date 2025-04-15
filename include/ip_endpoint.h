@@ -30,6 +30,7 @@
 
 struct jambuf;
 struct ip_protocol;
+enum ip_hport;
 
 typedef struct {
 	struct ip_base ip;	/* MUST BE FIRST */
@@ -149,7 +150,6 @@ bool endpoint_address_eq_address(const ip_endpoint endpoint, const ip_address ad
  */
 
 int endpoint_hport(const ip_endpoint endpoint);
-ip_endpoint set_endpoint_port(const ip_endpoint endpoint,
-			      ip_port port) MUST_USE_RESULT;
+ip_endpoint set_endpoint_hport(const ip_endpoint endpoint, enum ip_hport hport) MUST_USE_RESULT;
 
 #endif

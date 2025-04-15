@@ -24,7 +24,7 @@
 
 const ip_port unset_port; /* aka all ports? */
 
-ip_port ip_hport(unsigned hport)
+ip_port ip_hport(enum ip_hport hport)
 {
 	ip_port port = {
 		.ip.is_set = true,
@@ -38,7 +38,7 @@ ip_port ip_nport(unsigned nport)
 	return ip_hport(ntohs(nport));
 }
 
-unsigned hport(const ip_port port)
+enum ip_hport hport(const ip_port port)
 {
 	return port.hport;
 }
