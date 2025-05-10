@@ -52,7 +52,7 @@ struct ppk_id_payload ppk_id_payload(enum ikev2_ppk_id_type type,
 		.type = type,
 		.ppk_id = ppk_id,
 	};
-	if (LDBGP(DBG_BASE, logger)) {
+	if (LDBGP(DBG_CRYPT, logger)) {
 		LDBG_log(logger, "ppk type: %d", (int) payload.type);
 		LDBG_log(logger, "ppk_id from payload:");
 		LDBG_hunk(logger, &payload.ppk_id);
