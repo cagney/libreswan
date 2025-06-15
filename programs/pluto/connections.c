@@ -1269,7 +1269,9 @@ static deltatime_t extract_deltatime(const char *leftright,
 
 static unsigned extract_enum_name(const char *leftright,
 				  const char *name,
-				  const char *value, unsigned unset,
+				  const char *value,
+				  unsigned value_when_unset /*i.e., 0*/,
+				  unsigned value_when_never_negotiate,
 				  const struct enum_names *names,
 				  const struct whack_message *wm,
 				  diag_t *d,
@@ -1278,11 +1280,11 @@ static unsigned extract_enum_name(const char *leftright,
 	(*d) = NULL;
 
 	if (never_negotiate_string_option(leftright, name, value, wm, logger)) {
-		return unset;
+		return value_when_never_negotiate;
 	}
 
 	if (value == NULL) {
-		return unset;
+		return value_when_unset;
 	}
 
 	int match = enum_match(names, shunk1(value));
@@ -2000,6 +2002,7 @@ static diag_t extract_host_end(struct host_end *host,
 
 	enum keyword_auth auth = extract_enum_name(leftright, "auth", src->auth,
 						   /*value_when_unset*/AUTH_UNSET,
+						   /*value_when_never_negotiate*/AUTH_UNSET,
 						   &keyword_auth_names,
 						   wm, &d, logger);
 	if (d != NULL) {
@@ -4788,7 +4791,8 @@ static diag_t extract_connection(const struct whack_message *wm,
 						   wm, c->logger);
 
 		config->send_ca = extract_enum_name("", "sendca", wm->sendca,
-						    CA_SEND_ALL,
+						    /*value_when_unset*/CA_SEND_ALL,
+						    /*value_when_never_negotiate*/CA_SEND_ALL,
 						    &send_ca_policy_names,
 						    wm, &d, c->logger);
 
