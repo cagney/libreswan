@@ -2217,7 +2217,7 @@ static struct ikev2_proposals *get_v2_child_proposals(struct connection *c,
 						      const struct dh_desc *default_dh,
 						      struct verbose verbose)
 {
-	if (!pexpect(c->config->child_sa.proposals.p != NULL)) {
+	if (!pexpect(c->config->child.proposals.p != NULL)) {
 		return NULL;
 	}
 
@@ -2240,7 +2240,7 @@ static struct ikev2_proposals *get_v2_child_proposals(struct connection *c,
 		 c->config->ms_dh_downgrade ? 2 :
 		 1);
 	int v2_proposals_roof =
-		1 + nr_passes * nr_proposals(c->config->child_sa.proposals.p);
+		1 + nr_passes * nr_proposals(c->config->child.proposals.p);
 	v2_proposals->proposal = alloc_things(struct ikev2_proposal, v2_proposals_roof,
 					      "ESP/AH proposal");
 
@@ -2266,7 +2266,7 @@ static struct ikev2_proposals *get_v2_child_proposals(struct connection *c,
 
 	for (unsigned pass = 1; pass <= nr_passes; pass++) {
 
-		FOR_EACH_PROPOSAL(c->config->child_sa.proposals.p, proposal) {
+		FOR_EACH_PROPOSAL(c->config->child.proposals.p, proposal) {
 
 			VDBG_JAMBUF(log) {
 				jam(log, "converting proposal ");
@@ -2530,7 +2530,7 @@ struct ikev2_proposals *get_v2_CREATE_CHILD_SA_rekey_child_proposals(struct ike_
 	 * requires that either ALL or NO proposals have DH.  Hence
 	 * the need to only look at the first proposal.
 	 */
-	struct proposal *proposal = next_proposal(cc->config->child_sa.proposals.p, NULL);
+	struct proposal *proposal = next_proposal(cc->config->child.proposals.p, NULL);
 	const struct algorithm *proposal_dh = next_algorithm(proposal, PROPOSAL_dh, NULL);
 
 	struct ikev2_proposals *proposals;

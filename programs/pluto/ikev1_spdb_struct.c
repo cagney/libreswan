@@ -116,7 +116,7 @@ static bool ikev1_verify_esp(const struct connection *c,
 			     const struct trans_attrs *ta,
 			     struct logger *logger)
 {
-	if (PBAD(logger, c->config->child_sa.proposals.p == NULL)) {
+	if (PBAD(logger, c->config->child.proposals.p == NULL)) {
 		return false;
 	}
 
@@ -214,7 +214,7 @@ static bool ikev1_verify_esp(const struct connection *c,
 		return false;
 	}
 
-	FOR_EACH_PROPOSAL(c->config->child_sa.proposals.p, proposal) {
+	FOR_EACH_PROPOSAL(c->config->child.proposals.p, proposal) {
 		struct v1_proposal algs = v1_proposal(proposal);
 		if (algs.encrypt == ta->ta_encrypt &&
 		    (algs.enckeylen == 0 ||
@@ -232,7 +232,7 @@ static bool ikev1_verify_ah(const struct connection *c,
 			    const struct trans_attrs *ta,
 			    struct logger *logger)
 {
-	if (PBAD(logger, c->config->child_sa.proposals.p == NULL)) {
+	if (PBAD(logger, c->config->child.proposals.p == NULL)) {
 		return false;
 	}
 
@@ -261,7 +261,7 @@ static bool ikev1_verify_ah(const struct connection *c,
 		return false;
 	}
 
-	FOR_EACH_PROPOSAL(c->config->child_sa.proposals.p, proposal) {	/* really AH */
+	FOR_EACH_PROPOSAL(c->config->child.proposals.p, proposal) {	/* really AH */
 		struct v1_proposal algs = v1_proposal(proposal);
 		if (algs.integ == ta->ta_integ) {
 			dbg("ESP IPsec Transform verified; matches alg_info entry");
@@ -1204,7 +1204,7 @@ bool ikev1_out_quick_sa(struct pbs_out *outs,
 {
 	struct connection *c = child->sa.st_connection;
 	struct db_sa *sadb = v1_kernel_alg_makedb(c->config->child_sa.encap_proto,
-						  c->config->child_sa.proposals,
+						  c->config->child.proposals,
 						  child->sa.st_policy.compress,
 						  child->sa.logger);
 

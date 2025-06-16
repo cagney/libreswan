@@ -610,9 +610,9 @@ static void discard_connection(struct connection **cp, bool connection_valid, wh
 		pfreeany(config->vti.interface);
 		free_chunk_content(&config->sec_label);
 		free_proposals(&config->ike_proposals.p);
-		free_proposals(&config->child_sa.proposals.p);
+		free_proposals(&config->child.proposals.p);
 		free_ikev2_proposals(&config->v2_ike_proposals);
-		free_ikev2_proposals(&config->child_sa.v2_ike_auth_proposals);
+		free_ikev2_proposals(&config->child.v2_ike_auth_proposals);
 		pfreeany(config->connalias);
 		pfree_list(&config->modecfg.dns);
 		pfreeany(config->modecfg.domains);
@@ -4470,8 +4470,8 @@ static diag_t extract_connection(const struct whack_message *wm,
 			NULL;
 		passert(fn != NULL);
 		struct proposal_parser *parser = fn(&proposal_policy);
-		config->child_sa.proposals.p = proposals_from_str(parser, encap_alg);
-		if (c->config->child_sa.proposals.p == NULL) {
+		config->child.proposals.p = proposals_from_str(parser, encap_alg);
+		if (c->config->child.proposals.p == NULL) {
 			pexpect(parser->diag != NULL);
 			diag_t d = parser->diag; parser->diag = NULL;
 			free_proposal_parser(&parser);
@@ -4481,7 +4481,7 @@ static diag_t extract_connection(const struct whack_message *wm,
 
 		LDBGP_JAMBUF(DBG_BASE, c->logger, buf) {
 			jam_string(buf, "ESP/AH string values: ");
-			jam_proposals(buf, c->config->child_sa.proposals.p);
+			jam_proposals(buf, c->config->child.proposals.p);
 		};
 
 		/*
@@ -4500,10 +4500,10 @@ static diag_t extract_connection(const struct whack_message *wm,
 		 * connection can be cached.
 		 */
 		if (c->config->ike_version == IKEv2) {
-			config->child_sa.v2_ike_auth_proposals =
+			config->child.v2_ike_auth_proposals =
 				get_v2_IKE_AUTH_new_child_proposals(c);
 			llog_v2_proposals(LOG_STREAM/*not-whack*/, c->logger,
-					  config->child_sa.v2_ike_auth_proposals,
+					  config->child.v2_ike_auth_proposals,
 					  "Child SA proposals (connection add)");
 		}
 	}

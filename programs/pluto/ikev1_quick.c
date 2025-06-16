@@ -614,7 +614,7 @@ struct child_sa *quick_outI1(struct ike_sa *ike,
 		 * use that group.
 		 * if not, fallback to old use-same-as-P1 behaviour
 		 */
-		child->sa.st_pfs_group = ikev1_quick_pfs(c->config->child_sa.proposals);
+		child->sa.st_pfs_group = ikev1_quick_pfs(c->config->child.proposals);
 		/* otherwise, use the same group as during Phase 1:
 		 * since no negotiation is possible, we pick one that is
 		 * very likely supported.
@@ -631,8 +631,8 @@ struct child_sa *quick_outI1(struct ike_sa *ike,
 		}
 		jam(buf, " {using isakmp"PRI_SO" msgid:%08" PRIx32 " proposal=",
 		    pri_so(ike->sa.st_serialno), child->sa.st_v1_msgid.id);
-		if (child->sa.st_connection->config->child_sa.proposals.p != NULL) {
-			jam_proposals(buf, child->sa.st_connection->config->child_sa.proposals.p);
+		if (child->sa.st_connection->config->child.proposals.p != NULL) {
+			jam_proposals(buf, child->sa.st_connection->config->child.proposals.p);
 		} else {
 			jam(buf, "defaults");
 		}
