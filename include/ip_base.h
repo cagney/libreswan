@@ -23,6 +23,7 @@
 /* base class */
 
 #include "ip_version.h"
+#include "ip_kind.h"
 
 struct ip_info;
 struct jambuf;
@@ -33,6 +34,7 @@ struct ip_base {
 #define ip_is_unset(IP) ((IP) == NULL || !(IP)->ip.is_set)
 
 	enum ip_version version:8; /* 0, IPv4(4), IPv6(6) */
+	enum ip_kind kind:8; /* .is_set XOR .kind */
 };
 
 /*

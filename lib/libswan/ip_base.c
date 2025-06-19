@@ -29,7 +29,15 @@ size_t jam_ip_invalid(struct jambuf *buf,
 	}
 
 	if (!ip->is_set) {
-		return jam(buf, "<unset-%s>", what);
+		if (ip->kind == 0) {
+			return jam(buf, "<unset-%s>", what);
+		}
+		size_t s = 0;
+		s += jam_sparse_short(buf, &ip_kind_names, ip->kind);
+		if (ip->version != 0) {
+			s += jam(buf, "%u", ip->version);
+		}
+		return s;
 	}
 
 	(*afi) = ip_version_info(ip->version);
