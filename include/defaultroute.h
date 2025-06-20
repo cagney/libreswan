@@ -20,6 +20,7 @@
 
 #include "verbose.h"
 #include "ip_address.h"
+#include "ip_kind.h"
 
 struct starter_end;
 struct logger;

@@ -804,24 +804,6 @@ enum sa_policy_bits {
 #define POL_SIGHASH_IDENTITY	LELEM(IKEv2_HASH_ALGORITHM_IDENTITY)	/* rfc4307-bis does responder support IDENTITY? */
 #define POL_SIGHASH_DEFAULTS	(POL_SIGHASH_SHA2_256 | POL_SIGHASH_SHA2_384 | POL_SIGHASH_SHA2_512);
 
-/*
- * values for right=/left=
- */
-enum keyword_host {
-	KH_NOTSET,
-	KH_DEFAULTROUTE,
-	KH_ANY,
-	KH_IFACE,
-	KH_OPPO,
-	KH_OPPOGROUP,
-	KH_GROUP,
-	KH_IPHOSTNAME,            	/* host_addr invalid, only string */
-	KH_IPADDR,
-	KH_DIRECT,
-};
-
-extern const struct sparse_names keyword_host_names;
-
 enum type_options {
 	KS_UNSET,
 	KS_TUNNEL,
