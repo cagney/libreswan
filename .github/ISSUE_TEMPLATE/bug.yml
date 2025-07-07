@@ -4,7 +4,7 @@ body:
   - type: textarea
     attributes:
       label: Please Tell Us About Your System
-      description: |
+      placeholder: |
         - what is the local machine's Operating System?
           Please include the output from `uname -a`
         - which Liberswan version is the local machine running?
@@ -26,7 +26,7 @@ body:
   - type: textarea
     attributes:
       label: Please Tell Us What Happened?
-      description: |
+      placeholder: |
         Also tell us, what you expected to happen?
     validations:
       required: true
