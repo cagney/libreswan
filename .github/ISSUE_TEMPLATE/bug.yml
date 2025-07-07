@@ -1,6 +1,7 @@
 name: Bug Report
+title: What is the problem?
 description: |
-  File a bug report<br>
+  File a bug report
 body:
   - type: markdown
     attributes:
@@ -9,7 +10,7 @@ body:
         _If you have an urgent problem that cannot wait, consider one of the [commercial support](https://libreswan.org/wiki/Support) options._
   - type: textarea
     attributes:
-      label: Please Tell Us About Your Host System
+      label: Please Tell Us About Your Operating System
       description: |
         - what is the local machine's Operating System?<br>
           Please include the output from `uname -a`
@@ -23,9 +24,9 @@ body:
       required: true
   - type: textarea
     attributes:
-      label: Please Tell us about your IPsec configuration
+      label: Please Describe Your IPsec Configuration
       description: |
-        If possible, include a copy of `ipsec.conf` (wrap it in back ticks)
+        - what are the host and client addresses?
         - are you using IKEv1 or IKEv2?<br>
           Since IKEv1 is [deprecated](https://www.rfc-editor.org/rfc/rfc9395) you're more likely to get attention when an IKEv1 problem is also demonstrated using IKEv2.
           However, we're still interested in interop. issues and crashes.
