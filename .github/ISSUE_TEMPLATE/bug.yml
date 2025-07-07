@@ -1,9 +1,12 @@
 name: Bug Report
 description: |
   File a bug report<br>
-  /Please remember that this is a volunteer project, if you have an urgent problem that cannot wait, consider one
-  of the [commercial support](https://libreswan.org/wiki/Support) options./
 body:
+  - type: markdown
+    value: |
+      Please remember that this is a volunteer project.
+      If you have an urgent problem that cannot wait, consider one
+      of the [commercial support](https://libreswan.org/wiki/Support) options.
   - type: textarea
     attributes:
       label: Please Tell Us About Your Host System
