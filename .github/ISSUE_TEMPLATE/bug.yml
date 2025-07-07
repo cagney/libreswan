@@ -3,17 +3,25 @@ description: File a bug report.
 body:
   - type: textarea
     attributes:
-      label: Please Tell Us About Your System
-      placeholder: |
-        - what is the local machine's Operating System?
+      label: Please Tell Us About Your Host System
+      description: |
+        - what is the local machine's Operating System?<br>
           Please include the output from `uname -a`
-        - which Liberswan version is the local machine running?
+        - which Liberswan version is the local machine running?<br>
           Please include the output from `ipsec whack --version`.
           You're more likely to get someones attention when the problem has been reproduced in the current release
           (remember that this is a volunteer project, if you have an urgent problem that cannot wait, consider one
           of the [commercial support options](https://libreswan.org/wiki/Support)
-        - is the peer different?
+        - is the peer different?<br>
           If so, please include its details.
+      placeholder: Your system details
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Please Tell us about your IPsec configuration
+      description: |
+        If possible, include a copy of `ipsec.conf` (wrap it in back ticks)
         - are you using IKEv1 or IKEv2?
           Since IKEv1 is [deprecated](https://www.rfc-editor.org/rfc/rfc9395) you're more likely to get attention when an IKEv1 problem is also demonstrated using IKEv2.
           However, we're still interested in interop. issues and crashes.
@@ -21,8 +29,12 @@ body:
           AH has been made obsolete by ESP and NULL authentication (the only exception is AH+TRANSPORT).
         - (on Linux) are you using VTI or IPsec Interfaces (XFRMI)?
           If you're using VTI then please try IPsec Interfaces.
+      placeholder: |
+        - if necessary remove sensitive details
+          but keep as much information as possible
+        - this will be automatically formatted into code, so no need for backticks
     validations:
-      required: true
+      required: false
   - type: textarea
     attributes:
       label: Please Tell Us What Happened?
@@ -41,17 +53,6 @@ body:
           most problems are better understood with just the standard logs
         - this will be automatically formatted into code, so no need for backticks.
       render: shell
-  - type: textarea
-    attributes:
-      label: Your configuration
-      description: Please copy and past your configuration file.
-      placeholder: |
-        - if necessary remove sensitive details
-          but keep as much information as possible
-        - this will be automatically formatted into code, so no need for backticks
-      render: shell
-    validations:
-      required: false
   - type: markdown
     attributes:
       value: |
