@@ -8,10 +8,8 @@ body:
         - what is the local machine's Operating System?<br>
           Please include the output from `uname -a`
         - which Liberswan version is the local machine running?<br>
-          Please include the output from `ipsec whack --version`.
+          Please include the output from `ipsec whack --version`.<br>
           You're more likely to get someones attention when the problem has been reproduced in the current release
-          (remember that this is a volunteer project, if you have an urgent problem that cannot wait, consider one
-          of the [commercial support options](https://libreswan.org/wiki/Support)
         - is the peer different?<br>
           If so, please include its details.
       placeholder: Your system details
@@ -55,5 +53,7 @@ body:
     attributes:
       value: |
         Thanks for taking the time to fill out this bug report!
+        (Please remember that this is a volunteer project, if you have an urgent problem that cannot wait, consider one
+        of the [commercial support](https://libreswan.org/wiki/Support) options.)
     validations:
       required: false
