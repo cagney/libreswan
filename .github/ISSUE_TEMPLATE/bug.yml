@@ -11,18 +11,16 @@ body:
           Please include the output from `ipsec whack --version`.
           You're more likely to get someones attention when the problem has been reproduced in the current release
           (remember that this is a volunteer project, if you have an urgent problem that cannot wait, consider one
-          of the (commercial support options)[https://libreswan.org/wiki/Support]) 
+          of the (https://libreswan.org/wiki/Support)[commercial support options]
         - is the peer different?
           If so, please include its details.
         - are you using IKEv1 or IKEv2?
-        Since IKEv1 is (depreciated)[https://www.rfc-editor.org/rfc/rfc9395]
-        You're more likely to get someones attention when an IKEv1 problem is also demonstrated using IKEv2.
-        However, we're still interested in interop. issues and crashes.
+          Since IKEv1 is (https://www.rfc-editor.org/rfc/rfc9395)[deprecated] you're more likely to get attention when an IKEv1 problem is also demonstrated using IKEv2.
+          However, we're still interested in interop. issues and crashes.
         - are you using ESP or AH, TRANSPORT or TUNNEL mode, IPCOMP, IP-TFS?
-        AH has been made obsolete by ESP and NULL authentication (the only
-        exception is AH+TRANSPORT).
+          AH has been made obsolete by ESP and NULL authentication (the only exception is AH+TRANSPORT).
         - (on Linux) are you using VTI or IPsec Interfaces (XFRMI)?
-        If you're using VTI then please try IPsec Interfaces.
+          If you're using VTI then please try IPsec Interfaces.
     validations:
       required: true
   - type: textarea
