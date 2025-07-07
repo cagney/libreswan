@@ -6,14 +6,14 @@ body:
       label: Please Tell Us About Your System
       description: |
         - what is the local machine's Operating System?
-        Please include the output from `uname -a`
+          Please include the output from `uname -a`
         - which Liberswan version is the local machine running?
-        Please include the output from `ipsec whack --version`.
-        You're more likely to get someones attention when the problem has been reproduced in the current release
-        (remember that this is a volunteer project, if you have an urgent problem that cannot wait, consider one
-        of the (commercial support options)[https://libreswan.org/wiki/Support]) 
+          Please include the output from `ipsec whack --version`.
+          You're more likely to get someones attention when the problem has been reproduced in the current release
+          (remember that this is a volunteer project, if you have an urgent problem that cannot wait, consider one
+          of the (commercial support options)[https://libreswan.org/wiki/Support]) 
         - is the peer different?
-        If so, please include its details.
+          If so, please include its details.
         - are you using IKEv1 or IKEv2?
         Since IKEv1 is (depreciated)[https://www.rfc-editor.org/rfc/rfc9395]
         You're more likely to get someones attention when an IKEv1 problem is also demonstrated using IKEv2.
