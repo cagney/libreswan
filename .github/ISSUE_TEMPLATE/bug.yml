@@ -1,6 +1,5 @@
 name: Bug Report
 description: File a bug report.
-type: bug
 body:
   - type: markdown
     attributes:
@@ -26,8 +25,6 @@ body:
         If you're using VTI then please try IPsec Interfaces.
     validations:
       required: true
-    validations:
-      required: false
   - type: textarea
     attributes:
       label: Please Tell Us What Happened?
