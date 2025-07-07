@@ -1,7 +1,7 @@
 name: Bug Report
 description: File a bug report.
 body:
-  - type: markdown
+  - type: textarea
     attributes:
       label: Please Tell Us About Your System
       description: |
