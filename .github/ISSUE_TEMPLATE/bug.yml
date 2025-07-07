@@ -5,9 +5,8 @@ body:
   - type: markdown
     attributes:
       value: |
-        Please remember that this is a volunteer project.
-        If you have an urgent problem that cannot wait, consider one
-        of the [commercial support](https://libreswan.org/wiki/Support) options.
+        _Please remember that this is a volunteer project._
+        _If you have an urgent problem that cannot wait, consider one of the [commercial support](https://libreswan.org/wiki/Support) options._
   - type: textarea
     attributes:
       label: Please Tell Us About Your Host System
