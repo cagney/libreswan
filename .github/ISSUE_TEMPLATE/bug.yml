@@ -4,7 +4,7 @@ type: bug
 description: |
   Libreswan isn't behaving as expected.
 body:
-  - type: markdown
+  - type: textarea
     attributes:
       value: |
         _Please remember that this is a volunteer project._<br>
