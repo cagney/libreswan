@@ -1,5 +1,8 @@
 name: Bug Report
-description: File a bug report.
+description: |
+  File a bug report<br>
+  /Please remember that this is a volunteer project, if you have an urgent problem that cannot wait, consider one
+  of the [commercial support](https://libreswan.org/wiki/Support) options./
 body:
   - type: textarea
     attributes:
@@ -53,7 +56,5 @@ body:
     attributes:
       value: |
         Thanks for taking the time to fill out this bug report!
-        (Please remember that this is a volunteer project, if you have an urgent problem that cannot wait, consider one
-        of the [commercial support](https://libreswan.org/wiki/Support) options.)
     validations:
       required: false
