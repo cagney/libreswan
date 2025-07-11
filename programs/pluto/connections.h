@@ -74,10 +74,9 @@ struct kernel_acquire;
 struct connection *connection_by_serialno(co_serial_t serialno);
 
 /*
- * IKE SA configuration.
- *
- * This contains stuff used by IKE_SA_INIT + IKE_AUTH to establish and
- * then authenticate the IKE SA.
+ * Unresolved host address.  Resolved addresses are stored in the
+ * connection proper.  .name is always valid, .addr is valid when
+ * .type==IPADDR.
  */
 
 struct host_addr_config {
@@ -85,6 +84,13 @@ struct host_addr_config {
 	char *name;	/* string version from whack */
 	ip_address addr;
 };
+
+/*
+ * IKE SA configuration.
+ *
+ * This contains stuff used by IKE_SA_INIT + IKE_AUTH to establish and
+ * then authenticate the IKE SA.
+ */
 
 struct host_end_config {
 	const char *leftright;

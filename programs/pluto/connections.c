@@ -1676,7 +1676,7 @@ static diag_t extract_host_end(struct host_end *host,
 			       const struct whack_message *wm,
 			       const struct whack_end *src,
 			       const struct whack_end *other_src,
-			       const struct resolve_end *resolve,
+			       const struct host_addr_config *host_addr,
 			       const struct host_addr_config *const host_addrs[END_ROOF],
 			       enum ike_version ike_version,
 			       struct authby whack_authby,
@@ -1736,13 +1736,13 @@ static diag_t extract_host_end(struct host_end *host,
 		host_config->id = id;
 
 	} else if (!is_never_negotiate_wm(wm) &&
-		   resolve->host.type == KH_IPADDR) {
+		   host_addr->type == KH_IPADDR) {
 
 		address_buf ab;
-		err_t e = atoid(str_address(&resolve->host.addr, &ab), &id);
+		err_t e = atoid(str_address(&host_addr->addr, &ab), &id);
 		if (e != NULL) {
 			return diag("%sid=%s invalid: %s",
-				    leftright, resolve->host.name, e);
+				    leftright, host_addr->name, e);
 		}
 
 		id_buf idb;
@@ -2266,7 +2266,7 @@ static diag_t extract_host_end(struct host_end *host,
 
 static diag_t extract_child_end_config(const struct whack_message *wm,
 				       const struct whack_end *src,
-				       const struct resolve_end *resolve,
+				       const struct host_addr_config *host_addr,
 				       ip_protoport protoport,
 				       enum ike_version ike_version,
 				       struct connection *c,
@@ -2538,14 +2538,14 @@ static diag_t extract_child_end_config(const struct whack_message *wm,
 						    str_address(sourceip, &sipb),
 						    leftright, src->subnet);
 				}
-			} else if (resolve->host.addr.ip.is_set) {
-				if (!address_eq_address(*sourceip, resolve->host.addr)) {
+			} else if (host_addr->addr.ip.is_set) {
+				if (!address_eq_address(*sourceip, host_addr->addr)) {
 					address_buf sipb;
 					address_buf hab;
 					return diag("%ssourceip=%s invalid, address %s does not match %s=%s and %ssubnet= was not specified",
 						    leftright, src->sourceip,
 						    str_address(sourceip, &sipb),
-						    leftright, str_address(&resolve->host.addr, &hab),
+						    leftright, str_address(&host_addr->addr, &hab),
 						    leftright);
 				}
 			} else {
@@ -3060,7 +3060,6 @@ static diag_t extract_lifetime(deltatime_t *lifetime,
 
 static enum connection_kind extract_connection_end_kind(const struct whack_message *wm,
 							enum end this_end,
-							const struct resolve_end resolve[END_ROOF],
 							const struct host_addr_config *const host_addrs[END_ROOF],
 							const ip_protoport protoport[END_ROOF],
 							struct logger *logger)
@@ -3106,9 +3105,9 @@ static enum connection_kind extract_connection_end_kind(const struct whack_messa
 	}
 	if (!is_never_negotiate_wm(wm)) {
 		FOR_EACH_THING(lr, LEFT_END, RIGHT_END) {
-			const struct resolve_end *re = &resolve[lr];
-			if (!address_is_specified(re->host.addr) &&
-			    re->host.type != KH_IPHOSTNAME) {
+			const struct host_addr_config *re = host_addrs[lr];
+			if (!address_is_specified(re->addr) &&
+			    re->type != KH_IPHOSTNAME) {
 				ldbg(logger, "%s connection is CK_TEMPLATE: unspecified %s address yet policy negotiate",
 				     this->leftright, wm->end[lr].leftright);
 				return CK_TEMPLATE;
@@ -3530,62 +3529,6 @@ static diag_t extract_connection(const struct whack_message *wm,
 	};
 
 	/*
-	 * Now copy the extracted values into the resolve structure
-	 * and try to resolve them.
-	 */
-
-	struct resolve_end resolve[END_ROOF] = {
-		[LEFT_END] = { .leftright = "left", },
-		[RIGHT_END] = { .leftright = "right", },
-	};
-
-	FOR_EACH_THING(lr, LEFT_END, RIGHT_END) {
-		struct host_end_config *src = &config->end[lr].host;
- 		struct resolve_end *dst = &resolve[lr];
-		/* host */
-		dst->host.name = src->host.name;
-		dst->host.addr = src->host.addr;
-		dst->host.type = src->host.type;
-		/* nexthop */
-		dst->nexthop.name = src->nexthop.name;
-		dst->nexthop.addr = src->nexthop.addr;
-		dst->nexthop.type = src->nexthop.type;
-	}
-
-	bool can_resolve = true;
-	FOR_EACH_THING(lr, LEFT_END, RIGHT_END) {
-
- 		struct resolve_host *host = &resolve[lr].host;
- 		const char *leftright = wm->end[lr].leftright;
-		const char *name = "";
-		const char *value = host->name;
-
-		if (host->type == KH_IPHOSTNAME) {
-			ip_address addr;
-			err_t e = ttoaddress_dns(shunk1(value), host_afi, &addr);
-			if (e == NULL) {
-				host->addr = addr;
-				continue;
-			}
-
-			vlog("failed to resolve '%s%s=%s' at load time: %s",
-			     leftright, name, value, e);
-			can_resolve = false;
-		}
-	}
-
-	if (can_resolve) {
-		resolve_default_route(&resolve[LEFT_END],
-				      &resolve[RIGHT_END],
-				      host_afi,
-				      verbose);
-		resolve_default_route(&resolve[RIGHT_END],
-				      &resolve[LEFT_END],
-				      host_afi,
-				      verbose);
-	}
-
-	/*
 	 * Turn the .authby string into struct authby bit struct.
 	 */
 	struct authby whack_authby = {0};
@@ -3610,8 +3553,7 @@ static diag_t extract_connection(const struct whack_message *wm,
 				     wm,
 				     whack_ends[this],
 				     whack_ends[that],
-				     &resolve[this],
-				     host_addrs,
+				     host_addrs[this], host_addrs,
 				     ike_version, whack_authby,
 				     &same_ca[this],
 				     c->logger);
@@ -3655,7 +3597,6 @@ static diag_t extract_connection(const struct whack_message *wm,
 	 */
 	FOR_EACH_THING(end, LEFT_END, RIGHT_END) {
 		c->end[end].kind = extract_connection_end_kind(wm, end,
-							       resolve,
 							       host_addrs,
 							       protoport,
 							       c->logger);
@@ -5087,6 +5028,62 @@ static diag_t extract_connection(const struct whack_message *wm,
 		pfree_diag(&d);
 	}
 
+	/*
+	 * Now copy the extracted values into the resolve structure
+	 * and try to resolve them.
+	 */
+
+	struct resolve_end resolve[END_ROOF] = {
+		[LEFT_END] = { .leftright = "left", },
+		[RIGHT_END] = { .leftright = "right", },
+	};
+
+	FOR_EACH_THING(lr, LEFT_END, RIGHT_END) {
+		struct host_end_config *src = &config->end[lr].host;
+ 		struct resolve_end *dst = &resolve[lr];
+		/* host */
+		dst->host.name = src->host.name;
+		dst->host.addr = src->host.addr;
+		dst->host.type = src->host.type;
+		/* nexthop */
+		dst->nexthop.name = src->nexthop.name;
+		dst->nexthop.addr = src->nexthop.addr;
+		dst->nexthop.type = src->nexthop.type;
+	}
+
+	bool can_resolve = true;
+	FOR_EACH_THING(lr, LEFT_END, RIGHT_END) {
+
+ 		struct resolve_host *host = &resolve[lr].host;
+ 		const char *leftright = wm->end[lr].leftright;
+		const char *name = "";
+		const char *value = host->name;
+
+		if (host->type == KH_IPHOSTNAME) {
+			ip_address addr;
+			err_t e = ttoaddress_dns(shunk1(value), host_afi, &addr);
+			if (e == NULL) {
+				host->addr = addr;
+				continue;
+			}
+
+			vlog("failed to resolve '%s%s=%s' at load time: %s",
+			     leftright, name, value, e);
+			can_resolve = false;
+		}
+	}
+
+	if (can_resolve) {
+		resolve_default_route(&resolve[LEFT_END],
+				      &resolve[RIGHT_END],
+				      host_afi,
+				      verbose);
+		resolve_default_route(&resolve[RIGHT_END],
+				      &resolve[LEFT_END],
+				      host_afi,
+				      verbose);
+	}
+
 	FOR_EACH_THING(end, LEFT_END, RIGHT_END) {
 		update_hosts_from_end_host_addr(c, end,
 						resolve[end].host.addr,
@@ -5149,7 +5146,7 @@ static diag_t extract_connection(const struct whack_message *wm,
 
 	FOR_EACH_THING(end, LEFT_END, RIGHT_END) {
 		d = extract_child_end_config(wm, whack_ends[end],
-					     &resolve[end],
+					     host_addrs[end],
 					     protoport[end],
 					     ike_version,
 					     c, &config->end[end].child,
