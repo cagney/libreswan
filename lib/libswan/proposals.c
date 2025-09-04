@@ -1358,6 +1358,21 @@ static bool parse_prf_transforms(struct proposal_parser *parser,
 	if (parse_transform_algorithms(parser, proposal, transform_type_prf, tokens, verbose)) {
 		/* advance */
 		vdbg("<encrypt>-<PRF> succeeded");
+
+		ldbgf(DBG_PROPOSAL_PARSER, logger, "attempting <encr>-<prf>-<INTEG>...");
+		tokens_at_start = (*tokens);
+		nr_transforms_at_start = proposal->transforms.len; /* for unwinding */
+		if (!parse_transform_algorithms(parser, proposal, transform_type_integ, tokens,
+						verbose)) {
+			ldbgf(DBG_PROPOSAL_PARSER, logger,
+			      "<encr>-<prf>-<INTEG> failed, discarding error: %s",
+			      str_diag(parser->diag));
+			pfree_transforms(proposal, transform_type_prf);
+			pfree_diag(&parser->diag);
+			(*tokens) = tokens_at_start;
+			/* truncate the transforms array */
+			realloc_data(&proposal->transforms, nr_transforms_at_start);
+		}
 		return true;
 	}
 
