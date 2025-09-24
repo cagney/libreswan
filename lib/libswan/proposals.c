@@ -64,6 +64,7 @@ struct tokens {
 	struct proposal_term prev;
 	struct proposal_term curr;
 	struct proposal_term next;
+	shunk_t cursor;
 	shunk_t input;
 	const char *delims;
 };
@@ -93,7 +94,7 @@ static void next_token(struct tokens *tokens, struct verbose verbose)
 	tokens->prev = tokens->curr;
 	tokens->curr = tokens->next;
 	/* parse new next */
-	tokens->next.token = shunk_token(&tokens->input, &tokens->next.delim, tokens->delims);
+	tokens->next.token = shunk_token(&tokens->cursor, &tokens->next.delim, tokens->delims);
 	VDBG_JAMBUF(buf) {
 		jam_string(buf, "tokens:");
 		jam_string(buf, " ");
@@ -103,11 +104,11 @@ static void next_token(struct tokens *tokens, struct verbose verbose)
 		jam_string(buf, " ");
 		jam_token(buf, "", tokens->next);
 		jam_string(buf, " ");
-		if (tokens->input.ptr == NULL) {
+		if (tokens->cursor.ptr == NULL) {
 			jam_string(buf, "<null>");
 		} else {
 			jam_string(buf, "\"");
-			jam_shunk(buf, tokens->input);
+			jam_shunk(buf, tokens->cursor);
 			jam_string(buf, "\"");
 		}
 	}
@@ -117,6 +118,7 @@ static struct tokens first_token(shunk_t input, const char *delims,
 				 struct verbose verbose)
 {
 	struct tokens tokens = {
+		.cursor = input,
 		.input = input,
 		.delims = delims,
 	};
