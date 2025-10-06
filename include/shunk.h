@@ -33,7 +33,7 @@
  */
 
 struct shunk {
-	const void *ptr;
+	const uint8_t *ptr;
 	size_t len;
 };
 
