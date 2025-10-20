@@ -1616,10 +1616,14 @@ void show_setup_plutomain(struct show *s)
 			jam(buf, "%ju", nhelpers);
 		}
 		jam(buf, ", uniqueids=%s", bool_str(pluto_uniqueIDs));
-		jam(buf, ", shuntlifetime=%jds",
-		    deltasecs(config_setup_deltatime(oco, KBF_SHUNTLIFETIME)));
-		jam(buf, ", expire-lifetime=%jds",
-		    deltasecs(config_setup_deltatime(oco, KBF_EXPIRE_LIFETIME)));
+		/**/
+		jam_string(buf, ", shuntlifetime=");
+		jam_deltatime(buf, config_setup_deltatime(oco, KBF_SHUNTLIFETIME));
+		jam_string(buf, "s");
+		/**/
+		jam_string(buf, ", expire-lifetime=");
+		jam_deltatime(buf, config_setup_deltatime(oco, KBF_EXPIRE_LIFETIME));
+		jam_string(buf, "s");
 	}
 
 	show_log(s);
