@@ -38,7 +38,8 @@ static void cipher_op_cbc_nss(const struct encrypt_desc *cipher,
 			      PK11SymKey *symkey,
 			      shunk_t salt,
 			      chunk_t wire_iv,
-			      chunk_t text,
+			      shunk_t in,
+			      chunk_t *out,
 			      struct crypt_mac *ikev1_iv,
 			      struct logger *logger)
 {
@@ -93,11 +94,10 @@ static void cipher_op_cbc_nss(const struct encrypt_desc *cipher,
 	}
 
 	/* Output buffer for transformed data. */
-	uint8_t *out_ptr = PR_Malloc(text.len);
-	int out_len = 0; /* not size_t; ulgh */
-
-	SECStatus rv = PK11_CipherOp(enccontext, out_ptr, &out_len, text.len,
-				     text.ptr, text.len);
+	int out_len = 0;
+	SECStatus rv = PK11_CipherOp(enccontext,
+				     out->ptr, &out_len, out->len,
+				     in.ptr, in.len);
 	if (rv != SECSuccess) {
 		passert_nss_error(logger, HERE,
 				  "%s: PKCS11 operation failure", cipher->common.fqn);
@@ -117,21 +117,21 @@ static void cipher_op_cbc_nss(const struct encrypt_desc *cipher,
 		 * ... and hence this needs to happen before the input
 		 * is scribbled on by the memcpy below.
 		 */
-		uint8_t *new_iv;
+		const uint8_t *new_iv;
 		switch (op) {
 		case ENCRYPT:
 			/*
 			 * The IV for the next encryption call is the last
 			 * block of encrypted OUTPUT data.
 			 */
-			new_iv = out_ptr + out_len - cipher->enc_blocksize;
+			new_iv = out->ptr + out_len - cipher->enc_blocksize;
 			break;
 		case DECRYPT:
 			/*
 			 * The IV for the next decryption call is the last
 			 * block of the encrypted INPUT data.
 			 */
-			new_iv = text.ptr + text.len - cipher->enc_blocksize;
+			new_iv = in.ptr + in.len - cipher->enc_blocksize;
 			break;
 		default:
 			bad_case(op);
@@ -140,18 +140,12 @@ static void cipher_op_cbc_nss(const struct encrypt_desc *cipher,
 		memcpy(ikev1_iv->ptr, new_iv, cipher->enc_blocksize);
 	}
 
-	/*
-	 * Finally, copy the transformed data back to the buffer.  Do
-	 * this after extracting the IV.
-	 *
-	 * Note: this needs to happen after the IKEv1 IV is saved (so
-	 * that the old final block is still available).
-	 */
-	memcpy(text.ptr, out_ptr, text.len);
-	PR_Free(out_ptr);
+	out->len = out_len; /* possible truncation */
 
-	if (secparam != NULL)
+	if (secparam != NULL) {
 		SECITEM_FreeItem(secparam, PR_TRUE);
+	}
+
 	ldbgf(DBG_CRYPT, logger, "NSS ike_alg_nss_cbc: %s - exit", cipher->common.fqn);
 }
 

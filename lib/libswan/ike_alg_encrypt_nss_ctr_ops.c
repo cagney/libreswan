@@ -71,7 +71,8 @@ static void cipher_op_ctr_nss(const struct encrypt_desc *cipher,
 			      PK11SymKey *sym_key,
 			      shunk_t salt,
 			      chunk_t wire_iv,
-			      chunk_t text,
+			      shunk_t in,
+			      chunk_t *out,
 			      struct crypt_mac *ikev1_iv/*possbly-NULL*/,
 			      struct logger *logger)
 {
@@ -129,15 +130,14 @@ static void cipher_op_ctr_nss(const struct encrypt_desc *cipher,
 	param.len = sizeof(ctr_params);
 
 	/* Output buffer for transformed data. */
-	uint8_t *out_ptr = PR_Malloc(text.len);
 	unsigned int out_len = 0; /* not size_t; ulgh! */
 
 	switch (op) {
 	case ENCRYPT:
 	{
 		SECStatus rv = PK11_Encrypt(sym_key, CKM_AES_CTR, &param,
-					    out_ptr, &out_len, text.len,
-					    text.ptr, text.len);
+					    out->ptr, &out_len, out->len,
+					    in.ptr, in.len);
 		if (rv != SECSuccess) {
 			passert_nss_error(logger, HERE, "PK11_Encrypt failure");
 		}
@@ -146,8 +146,8 @@ static void cipher_op_ctr_nss(const struct encrypt_desc *cipher,
 	case DECRYPT:
 	{
 		SECStatus rv = PK11_Decrypt(sym_key, CKM_AES_CTR, &param,
-					    out_ptr, &out_len, text.len,
-					    text.ptr, text.len);
+					    out->ptr, &out_len, out->len,
+					    in.ptr, in.len);
 		if (rv != SECSuccess) {
 			passert_nss_error(logger, HERE, "PK11_Decrypt failure");
 		}
@@ -157,9 +157,7 @@ static void cipher_op_ctr_nss(const struct encrypt_desc *cipher,
 		bad_case(op);
 	}
 
-	memcpy(text.ptr, out_ptr, text.len);
-	PR_Free(out_ptr);
-
+	out->len = out_len;
 
 	if (iv_source == USE_IKEv1_IV) {
 		/*
@@ -173,11 +171,11 @@ static void cipher_op_ctr_nss(const struct encrypt_desc *cipher,
 		 */
 		uint32_t *counter = (uint32_t*)(ikev1_iv->ptr + AES_BLOCK_SIZE - sizeof(uint32_t));
 		uint32_t old_counter = ntohl(*counter);
-		size_t increment = (text.len + AES_BLOCK_SIZE - 1) / AES_BLOCK_SIZE;
+		size_t increment = (in.len + AES_BLOCK_SIZE - 1) / AES_BLOCK_SIZE;
 		uint32_t new_counter = old_counter + increment;
 		ldbgf(DBG_CRYPT, logger,
 		      "%s() counter-block updated from 0x%" PRIx32 " to 0x%" PRIx32 " for %zd bytes",
-		      __func__, old_counter, new_counter, text.len);
+		      __func__, old_counter, new_counter, in.len);
 		/* Wrap ... */
 		passert(new_counter >= old_counter);
 		*counter = htonl(new_counter);

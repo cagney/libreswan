@@ -33,11 +33,12 @@ static void cipher_op_null(const struct encrypt_desc *cipher UNUSED,
 			   PK11SymKey *symkey UNUSED,
 			   shunk_t salt UNUSED,
 			   chunk_t wire_iv UNUSED,
-			   chunk_t text UNUSED,
+			   shunk_t in,
+			   chunk_t *out,
 			   struct crypt_mac *ikev1_iv UNUSED,
 			   struct logger *logger UNUSED)
 {
-	/* nothing happens */
+	hunk_cpy(*out, in);
 }
 
 static void cipher_check_null(const struct encrypt_desc *encrypt,

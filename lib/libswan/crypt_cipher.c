@@ -190,14 +190,17 @@ void cipher_context_op_normal(const struct cipher_context *cipher_context,
 			      struct crypt_mac *ikev1_iv,
 			      struct logger *logger)
 {
+	chunk_t in = clone_hunk_as_chunk(&text, "in");
 	cipher_context->cipher->encrypt_ops->cipher_op_normal(cipher_context->cipher,
 							      cipher_context->op_context,
 							      cipher_context->op,
 							      cipher_context->iv_source,
 							      cipher_context->symkey,
 							      HUNK_AS_SHUNK(&cipher_context->salt),
-							      wire_iv, text,
+							      wire_iv,
+							      HUNK_AS_SHUNK(&in), &text,
 							      ikev1_iv,
 							      logger);
+	free_chunk_content(&in);
 	verify_wire_iv(cipher_context, wire_iv, logger);
 }

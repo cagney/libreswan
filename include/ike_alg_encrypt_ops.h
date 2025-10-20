@@ -58,7 +58,8 @@ struct encrypt_ops {
 				       PK11SymKey *symkey,
 				       shunk_t salt,
 				       chunk_t wire_iv,
-				       chunk_t text,
+				       shunk_t in,
+				       chunk_t *out,
 				       /**/
 				       struct crypt_mac *ikev1_iv,
 				       struct logger *logger);
