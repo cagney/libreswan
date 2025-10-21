@@ -210,8 +210,9 @@ static void show_state(struct show *s, struct state *st, const monotime_t now)
 		for (const struct state_event **event = events; event < events+nr_events; event++) {
 			jam_string(buf, " ");
 			jam_enum_short(buf, &event_type_names, (*event)->ev_type);
-			intmax_t delta = deltasecs(monotime_diff((*event)->ev_time, now));
-			jam(buf, " in %jds;", delta);
+			jam_string(buf, " in ");
+			jam_deltatime(buf, monotime_diff((*event)->ev_time, now));
+			jam_string(buf, "s;");
 		}
 
 		if (c->established_ike_sa == st->st_serialno ||
@@ -231,10 +232,14 @@ static void show_state(struct show *s, struct state *st, const monotime_t now)
 		} else if (st->hidden_variables.st_peer_supports_dpd) {
 			/* ??? why is printing -1 better than 0? */
 			/* XXX: because config uses -1 for disabled? */
-			jam(buf, " lastdpd=%jds(seq in:%u out:%u);",
-			    (!is_monotime_epoch(st->st_last_dpd) ?
-			     deltasecs(monotime_diff(now, st->st_last_dpd)) :
-			     (intmax_t)-1),
+			jam_string(buf, " lastdpd=");
+			if (is_monotime_epoch(st->st_last_dpd)) {
+				jam_string(buf, "-1");
+			} else {
+				jam_deltatime(buf, monotime_diff(now, st->st_last_dpd));
+			}
+			jam_string(buf, "s");
+			jam(buf, "(seq in:%u out:%u);",
 			    st->st_dpd_seqno,
 			    st->st_dpd_expectseqno);
 		} else if (dpd_active_locally(st->st_connection) && (st->st_ike_version == IKEv2)) {
@@ -242,8 +247,9 @@ static void show_state(struct show *s, struct state *st, const monotime_t now)
 			if (IS_CHILD_SA(st)) {
 				struct state *pst = state_by_serialno(st->st_clonedfrom);
 				if (pst != NULL) {
-					jam(buf, " lastlive=%jds;",
-					    deltasecs(monotime_diff(now, pst->st_v2_msgid_windows.last_recv)));
+					jam_string(buf, " lastlive=");
+					jam_deltatime(buf, monotime_diff(now, pst->st_v2_msgid_windows.last_recv));
+					jam_string(buf, "s;");
 				}
 			}
 		} else if (st->st_ike_version == IKEv1) {
@@ -275,8 +281,9 @@ static void show_established_child_details(struct show *s, struct child_sa *chil
 		 */
 		if (c->negotiating_child_sa == child->sa.st_serialno &&
 		    child->sa.st_outbound_count != 0) {
-			jam(buf, " used %jds ago;",
-			    deltasecs(monotime_diff(now , child->sa.st_outbound_time)));
+			jam_string(buf, " used ");
+			jam_deltatime(buf, monotime_diff(now , child->sa.st_outbound_time));
+			jam(buf, "s ago;");
 		}
 
 #define add_said(ADDRESS, PROTOCOL, SPI)				\
