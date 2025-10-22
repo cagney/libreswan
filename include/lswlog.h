@@ -163,6 +163,7 @@ void llog_dump(enum stream stream,
 			  (h_ == NULL ? NULL : h_->ptr),		\
 			  (h_ == NULL ? 0 : h_->len));			\
 	}
+
 #define llog_thing(STREAM, LOGGER, THING)			\
 	llog_dump(STREAM, LOGGER, &(THING), sizeof(THING))
 
@@ -267,6 +268,13 @@ void ldbgf(lset_t cond, const struct logger *logger, const char *fmt, ...) PRINT
 
 #define LDBG_hunk(LOGGER, HUNK)			\
 	llog_hunk(DEBUG_STREAM, LOGGER, HUNK)
+
+#define ldbg_hunk(LOGGER, HUNK)				\
+	{						\
+		if (LDBGP(DBG_BASE, LOGGER)) {		\
+			LDBG_hunk(LOGGER, HUNK);	\
+		}					\
+	}
 
 #define LDBG_thing(LOGGER, THING)			\
 	llog_thing(DEBUG_STREAM, LOGGER, THING);
