@@ -2193,6 +2193,7 @@ static enum connection_kind extract_connection_end_kind(const struct whack_messa
 							enum end this_end,
 							const struct host_addr_config *const host_addrs[END_ROOF],
 							const ip_protoport protoport[END_ROOF],
+							bool clones,
 							struct verbose verbose)
 {
 	const struct whack_end *this = &wm->end[this_end];
@@ -2204,11 +2205,19 @@ static enum connection_kind extract_connection_end_kind(const struct whack_messa
 		     this->leftright);
 		return CK_GROUP;
 	}
+
 	if (wm->wm_sec_label != NULL) {
 		vdbg("%s connection is CK_LABELED_TEMPLATE: has security label: %s",
 		     this->leftright, wm->wm_sec_label);
 		return CK_LABELED_TEMPLATE;
 	}
+
+	if (clones) {
+		vdbg("%s connection is CK_LABELED_TEMPLATE: has clones",
+		     this->leftright);
+		return CK_LABELED_TEMPLATE;
+	}
+
 	if(wm->narrowing == YN_YES) {
 		vdbg("%s connection is CK_TEMPLATE: narrowing=yes",
 		     this->leftright);
@@ -2577,6 +2586,18 @@ diag_t extract_connection(const struct whack_message *wm,
 	}
 
 	/*
+	 * nr. child clones
+	 */
+	bool clones = config->child.clones = extract_sparse_name("", "clones",
+								 wm->wm_clones,
+								 /*value_when_unset*/false,
+								 &yn_option_names,
+								 wm, &d, verbose);
+	if (d != NULL) {
+		return d;
+	}
+
+	/*
 	 * Determine the connection KIND from the wm.
 	 *
 	 * Save it in a local variable so code can use that (and be
@@ -2587,22 +2608,11 @@ diag_t extract_connection(const struct whack_message *wm,
 		c->end[end].kind = extract_connection_end_kind(wm, end,
 							       host_addrs,
 							       protoport,
+							       clones,
 							       verbose);
 	}
 
 	vassert(c->base_name != NULL); /* see alloc_connection() */
-
-	/*
-	 * nr. child clones
-	 */
-	config->child.clones = extract_sparse_name("", "clones",
-						   wm->wm_clones,
-						   /*value_when_unset*/false,
-						   &yn_option_names,
-						   wm, &d, verbose);
-	if (d != NULL) {
-		return d;
-	}
 
 	/*
 	 * Extract policy bits.
