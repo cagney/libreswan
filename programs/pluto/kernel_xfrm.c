@@ -2198,36 +2198,70 @@ static void netlink_acquire(struct nlmsghdr *n, struct logger *logger)
 
 	/* XXX: kernel's __u64 != uintmax_t */
 	LDBGP_JAMBUF(DBG_BASE, logger, buf) {
-		jam(buf, "xfrm_user_acquire ");
-		jam(buf, " ");
-		jam(buf, "id {");
-		jam(buf, " daddr: xfrm_address_t");
-		jam(buf, " spi: %jx", (uintmax_t) acquire->id.spi);
-		jam(buf, " proto: %jx", (uintmax_t) acquire->id.proto);
-		jam(buf, " saddr: struct xfrm_address_t");
-		jam(buf, " sel: struct xfrm_selector");
-		jam(buf, "}");
-		jam(buf, " ");
-		jam(buf, "policy {");
-		jam(buf, " ");
-		jam(buf, "lft {");
-		/* XXX: kernel's __u64 != uint64_t */
-		jam(buf, " soft_add_expires_seconds=%ju", (uintmax_t)acquire->policy.lft.soft_add_expires_seconds);
-		jam(buf, " hard_add_expires_seconds=%ju", (uintmax_t)acquire->policy.lft.hard_add_expires_seconds);
-		jam(buf, " soft_use_expires_seconds=%ju", (uintmax_t)acquire->policy.lft.soft_use_expires_seconds);
-		jam(buf, " hard_use_expires_seconds=%ju", (uintmax_t)acquire->policy.lft.hard_use_expires_seconds);
-		jam(buf, "}");
-		jam(buf, " ");
-		jam(buf, "curlft {");
-		jam(buf, " add_time=%s", (uintmax_t)acquire->policy.curlft.add_time > 0 ? ">0" : "0");
-		jam(buf, " use_time=%s", (uintmax_t)acquire->policy.curlft.use_time > 0 ? ">0" : "0");
-		jam(buf, "}");
-		jam(buf, " ");
-		jam(buf, "}");
-		jam(buf, " aalgos: %u", (unsigned) acquire->aalgos);
-		jam(buf, " ealgos: %u", (unsigned) acquire->ealgos);
-		jam(buf, " calgos: %u", (unsigned) acquire->calgos);
-		jam(buf, " seq: %u", (unsigned) acquire->seq);
+		jam(buf, "xfrm_user_acquire");
+		jam(buf, " id");
+		{
+			jam(buf, " {");
+			jam(buf, " daddr=xfrm_address_t");
+			jam(buf, " spi=%jx", (uintmax_t) acquire->id.spi);
+			jam(buf, " proto=%jx", (uintmax_t) acquire->id.proto);
+			jam(buf, " }");
+		}
+		jam(buf, " saddr=xfrm_address_t");
+		jam(buf, " sel=xfrm_selector");
+		jam(buf, " policy");
+		{
+			jam(buf, " {");
+			jam(buf, " sel=xfrm_selector");
+			jam(buf, " lft");
+			{
+				jam(buf, " {");
+				/* XXX: kernel's __u64 != uint64_t */
+				jam(buf, " soft_add_expires_seconds=%ju", (uintmax_t)acquire->policy.lft.soft_add_expires_seconds);
+				jam(buf, " hard_add_expires_seconds=%ju", (uintmax_t)acquire->policy.lft.hard_add_expires_seconds);
+				jam(buf, " soft_use_expires_seconds=%ju", (uintmax_t)acquire->policy.lft.soft_use_expires_seconds);
+				jam(buf, " hard_use_expires_seconds=%ju", (uintmax_t)acquire->policy.lft.hard_use_expires_seconds);
+			}
+			jam(buf, " }");
+			jam(buf, " curlft");
+			{
+				jam(buf, " {");
+				jam(buf, " add_time=%s", (uintmax_t)acquire->policy.curlft.add_time > 0 ? ">0" : "0");
+				jam(buf, " use_time=%s", (uintmax_t)acquire->policy.curlft.use_time > 0 ? ">0" : "0");
+				jam(buf, " }");
+			}
+			jam(buf, " priority=%ju", (uintmax_t)acquire->policy.priority);
+			jam(buf, " index=%ju", (uintmax_t)acquire->policy.index);
+			jam(buf, " dir=%ju", (uintmax_t)acquire->policy.dir);
+			jam(buf, " action=");
+			{
+				switch (acquire->policy.action) {
+				case XFRM_POLICY_ALLOW: jam(buf, "allow"); break;
+				case XFRM_POLICY_BLOCK: jam(buf, "block"); break;
+				default: jam(buf, "%ju", (uintmax_t)acquire->policy.action); break;
+				}
+			}
+			jam(buf, " flags");
+			{
+				jam(buf, " {");
+				if (acquire->policy.flags & XFRM_POLICY_LOCALOK) {
+					jam_string(buf, " localok");
+				}
+				if (acquire->policy.flags & XFRM_POLICY_ICMP) {
+					jam_string(buf, " icmp");
+				}
+				if (acquire->policy.flags & XFRM_POLICY_CPU_ACQUIRE) {
+					jam_string(buf, " cpu-acquire");
+				}
+				jam(buf, " }");
+			}
+			jam(buf, " share=%ju", (uintmax_t)acquire->policy.share);
+			jam(buf, " }");
+		}
+		jam(buf, " aalgos=%u", (unsigned) acquire->aalgos);
+		jam(buf, " ealgos=%u", (unsigned) acquire->ealgos);
+		jam(buf, " calgos=%u", (unsigned) acquire->calgos);
+		jam(buf, " seq=%u", (unsigned) acquire->seq);
 	}
 
 	shunk_t sec_label = NULL_HUNK;
