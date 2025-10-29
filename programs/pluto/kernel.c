@@ -2366,6 +2366,9 @@ void jam_kernel_acquire(struct jambuf *buf, const struct kernel_acquire *b)
 		jam(buf, " policy=%u", (unsigned)b->policy_id);
 	}
 #endif
+	if (b->cpu > 0) {
+		jam(buf, " cpu=%u", b->cpu);
+	}
 }
 
 const struct kernel_ops *const kernel_stacks[] = {

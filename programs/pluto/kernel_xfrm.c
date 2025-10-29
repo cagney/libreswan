@@ -2264,7 +2264,6 @@ static void netlink_acquire(struct nlmsghdr *n, struct logger *logger)
 		jam(buf, " seq=%u", (unsigned) acquire->seq);
 	}
 
-	shunk_t sec_label = NULL_HUNK;
 	const struct ip_info *afi = aftoinfo(acquire->policy.sel.family);
 	if (afi == NULL) {
 		llog(RC_LOG, logger,
@@ -2290,15 +2289,20 @@ static void netlink_acquire(struct nlmsghdr *n, struct logger *logger)
 	ip_packet packet = packet_from_xfrm_selector(afi, &acquire->sel);
 
 	/*
-	 * Run through rtattributes looking for XFRMA_SEC_CTX
-	 * Instead, it should loop through all (known rtattributes
-	 * and use/log them.
+	 * Run through rtattributes looking for XFRMA_SEC_CTX and
+	 * XFRAQM_SA_PCPU.
+	 *
+	 * Instead, it should loop through all (known rtattributes and
+	 * use/log them. XXX: huh?
 	 */
 	struct rtattr *attr = (struct rtattr *)
 		((char*) NLMSG_DATA(n) +
 			NLMSG_ALIGN(sizeof(struct xfrm_user_acquire)));
 	size_t remaining = n->nlmsg_len -
 			NLMSG_SPACE(sizeof(struct xfrm_user_acquire));
+
+	shunk_t sec_label = NULL_HUNK;
+	unsigned cpu = 0;
 
 	while (remaining > 0) {
 		ldbg(logger, "xfrm acquire rtattribute type %u ...", attr->rta_type);
@@ -2333,6 +2337,14 @@ static void netlink_acquire(struct nlmsghdr *n, struct logger *logger)
 			}
 			break;
 		}
+
+		case XFRMA_SA_PCPU:
+		{
+			cpu = *(uint32_t*) RTA_DATA(attr);
+			ldbg(logger, "xfrm_sa_pcpu=%u", cpu);
+			break;
+		}
+
 		case XFRMA_SEC_CTX:
 		{
 			struct xfrm_user_sec_ctx *xuctx = (struct xfrm_user_sec_ctx *) RTA_DATA(attr);
@@ -2394,6 +2406,7 @@ static void netlink_acquire(struct nlmsghdr *n, struct logger *logger)
 		.sec_label = sec_label,
 		.state_id = acquire->seq,
 		.policy_id = acquire->policy.index,
+		.cpu = cpu,
 	};
 
 	initiate_ondemand(&b);

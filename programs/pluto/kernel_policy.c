@@ -279,7 +279,8 @@ bool add_sec_label_kernel_policy(const struct spd *spd,
 				 where_t where, const char *what)
 {
 	const struct connection *c = spd->connection;
-	PASSERT(logger, c->config->sec_label.len > 0);
+	PASSERT(logger, (c->config->sec_label.len > 0 ||
+			 c->config->child.clones));
 	enum kernel_mode kernel_mode =
 		(c->config->child.encap_mode == ENCAP_MODE_TUNNEL ? KERNEL_MODE_TUNNEL :
 		 KERNEL_MODE_TRANSPORT);

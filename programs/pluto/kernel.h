@@ -398,6 +398,8 @@ struct kernel_acquire {
 	bool by_acquire;			/* by kernel acquire, else by whack */
 	const struct logger *logger;		/* on stack, could have whack attached */
 	bool background;			/* close whackfd once started */
+	unsigned cpu;				/* the CPU requiring
+						 * the SA */
 	shunk_t sec_label;			/* on stack */
 	enum kernel_state_id state_id;		/* matches kernel state's .seq? */
 	enum kernel_policy_id policy_id;	/* matches kernel policy's .index? */
