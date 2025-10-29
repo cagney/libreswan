@@ -1,0 +1,45 @@
+/testing/guestbin/swan-prep
+east #
+ ipsec start
+Redirecting to: [initsystem]
+east #
+ ../../guestbin/wait-until-pluto-started
+east #
+ ipsec add westnet-eastnet
+"westnet-eastnet": added IKEv2 connection
+east #
+ echo "initdone"
+initdone
+east #
+ ipsec whack --trafficstatus
+east #
+ # policies and state should be multiple
+east #
+ ipsec _kernel state
+east #
+ ipsec _kernel policy
+east #
+ ipsec auto --status | grep westnet-eastnet
+"westnet-eastnet": 192.0.2.0/24===192.1.2.23[@east]...192.1.2.45[@west]===192.0.1.0/24; unrouted; my_ip=unset; their_ip=unset;
+"westnet-eastnet":   host: oriented; local: 192.1.2.23; remote: 192.1.2.45;
+"westnet-eastnet":   my_updown=ipsec _updown;
+"westnet-eastnet":   xauth us:none, xauth them:none, my_username=[any]; their_username=[any]
+"westnet-eastnet":   our auth:secret, their auth:secret, our autheap:none, their autheap:none;
+"westnet-eastnet":   modecfg info: us:none, them:none, modecfg policy:push, dns:unset, domains:unset, cat:unset;
+"westnet-eastnet":   cisco-split: no; cisco-unity: no; cisco-peer: no; nm-configured: no;
+"westnet-eastnet":   sec_label:
+"westnet-eastnet":   ike_life: 28800s; ipsec_life: 28800s; ipsec_max_bytes: 2^63B; ipsec_max_packets: 2^63; replay_window: 128; rekey_margin: 540s; rekey_fuzz: 100%; clones: yes;
+"westnet-eastnet":   iptfs: no; fragmentation: yes; packet-size: 0; max-queue-size: 0; drop-time: 0; init-delay: 0; reorder-window: 0;
+"westnet-eastnet":   retransmit-interval: 9999ms; retransmit-timeout: 99s; iketcp:no; iketcp-port:4500;
+"westnet-eastnet":   initial-contact:no; fake-strongswan:no; send-vendorid:no; send-no-esp-tfc:no;
+"westnet-eastnet":   policy: IKEv2+PSK+ENCRYPT+TUNNEL+PFS+IKE_FRAG_ALLOW+ESN_NO+ESN_YES;
+"westnet-eastnet":   v2-auth-hash-policy: none;
+"westnet-eastnet":   conn_prio: 24,24,0; interface: eth1; metric: 0; mtu: unset; sa_prio:auto; sa_tfc:none;
+"westnet-eastnet":   nflog-group: unset; mark: unset; vti-iface:unset; vti-routing:no; vti-shared:no; nic-offload:no;
+"westnet-eastnet":   our idtype: FQDN; our id=@east; their idtype: FQDN; their id=@west
+"westnet-eastnet":   sendca: all; our sendcert: always; their sendcert: always;
+"westnet-eastnet":   liveness: passive; dpddelay:0s; retransmit-timeout:60s
+"westnet-eastnet":   nat-traversal: encapsulation:auto; keepalive:20s
+"westnet-eastnet":   routing: unrouted;
+"westnet-eastnet":   conn serial: $1;
+east #
