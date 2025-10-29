@@ -763,6 +763,7 @@ static uintmax_t check_range(const char *story,
 	return value;
 }
 
+#if 0
 /*
  * Tricky.  It returns YNA so it can differentiate between N from the
  * default and N from an explicit value.
@@ -809,6 +810,7 @@ static uintmax_t extract_yn_uintmax(const char *story,
 	(*yna) = YNA_YES; /* it was set' it was not autoset */
 	return check_range(story, leftright, name, number, range, d, verbose);
 }
+#endif
 
 static uintmax_t extract_uintmax(const char *story,
 				 const char *leftright,
@@ -2593,16 +2595,11 @@ diag_t extract_connection(const struct whack_message *wm,
 	/*
 	 * nr. child clones
 	 */
-	config->child.clones.nr = extract_yn_uintmax("number of replicant Child SA",
-						     "", "clones", wm->wm_clones,
-						     (struct range) {
-							     .value_when_unset = 0,
-							     .value_when_yes = nr_processors_online(),
-							     .limit.min = 1,
-							     .limit.max = UINT_MAX,
-						     },
-						     &config->child.clones.yna,
-						     wm, &d, verbose);
+	config->child.clones = extract_sparse_name("", "clones",
+						   wm->wm_clones,
+						   /*value_when_unset*/false,
+						   &yn_option_names,
+						   wm, &d, verbose);
 	if (d != NULL) {
 		return d;
 	}

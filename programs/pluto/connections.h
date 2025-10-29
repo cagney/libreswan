@@ -262,10 +262,7 @@ struct child_config {
 		bool esp_tfc_padding_not_supported;	/* notification */
 	} send;
 
-	struct {
-		enum yna_options yna;
-		unsigned nr;
-	} clones;
+	bool clones;
 };
 
 struct config {

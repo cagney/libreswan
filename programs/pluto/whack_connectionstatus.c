@@ -742,12 +742,7 @@ static void show_connection_status(struct show *s, const struct connection *c)
 		jam(buf, " rekey_fuzz: %lu%%;", c->config->sa_rekey_fuzz);
 		/* clones */
 		jam_string(buf, " clones: ");
-		switch (c->config->child.clones.yna) {
-		case YNA_NO: jam_string(buf, "no"); break;
-		case YNA_YES: jam(buf, "%u", c->config->child.clones.nr); break;
-		case YNA_AUTO: jam(buf, "yes (%u)", c->config->child.clones.nr); break;
-		case YNA_UNSET: jam_string(buf, "no (unset)"); break;
-		}
+		jam_bool(buf, c->config->child.clones);
 		jam_string(buf, ";");
 	}
 
