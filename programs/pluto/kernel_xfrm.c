@@ -965,9 +965,9 @@ static bool kernel_xfrm_policy_add(enum kernel_policy_op op,
 	ldbg(logger, "%s() using family %s (%d)", __func__, dst_client_afi->ip_name, family);
 
 	/*
-	 * NEW will fail when an existing policy, UPD always
-	 * works.  This seems to happen in cases with NAT'ed
-	 * XP clients, or quick recycling/resurfacing of
+	 * NEWPOLICY fails when there is already an identical policy.
+	 * UPDPOLCY always works.  This seems to happen in cases with
+	 * NAT'ed XP clients, or quick recycling/resurfacing of
 	 * roadwarriors on the same IP.
 	 *
 	 * UPD is also needed for two separate tunnels with
@@ -981,7 +981,8 @@ static bool kernel_xfrm_policy_add(enum kernel_policy_op op,
 
 	/* The caller should have set the proper priority by now */
 	info->priority = policy->priority.value;
-	ldbg(logger, "%s() IPsec SA SPD priority set to %d", __func__, info->priority);
+	ldbg(logger, "%s() IPsec SA SPD priority set to %d",
+	     __func__, info->priority);
 
 	info->action = xfrm_action;
 	/* info->lft.soft_use_expires_seconds = deltasecs(use_lifetime); */
@@ -990,6 +991,10 @@ static bool kernel_xfrm_policy_add(enum kernel_policy_op op,
 	info->lft.hard_byte_limit = XFRM_INF;
 	info->lft.hard_packet_limit = XFRM_INF;
 	info->dir = xfrm_dir;
+
+        if (policy->per_cpu) {
+		info->flags |= XFRM_POLICY_CPU_ACQUIRE;
+	}
 
 	/*
 	 * Add the encapsulation protocol found in proto_info[] that

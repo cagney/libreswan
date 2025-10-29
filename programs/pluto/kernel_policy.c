@@ -57,6 +57,7 @@ static struct kernel_policy kernel_policy_from_void(ip_selector local, ip_select
 						    const struct sa_marks *sa_marks,
 						    const struct ipsec_interface *ipsec_interface,
 						    const shunk_t sec_label,
+						    bool per_cpu,
 						    const struct nic_offload *nic_offload,
 						    where_t where)
 {
@@ -78,6 +79,7 @@ static struct kernel_policy kernel_policy_from_void(ip_selector local, ip_select
 		.remote.client = remote,
 		.remote.route = remote,
 		/* details */
+		.per_cpu = per_cpu,
 		.priority = priority,
 		.kind = shunt_kind,
 		.shunt = shunt_policy,
@@ -328,8 +330,9 @@ bool add_spd_kernel_policy(const struct spd *spd,
 #if 0
 	/*
 	 * XXX: This happens when the code tearing down an IPsec
-	 * connection tries to install a bare shunt.  See
-	 * teardown_ipsec_kernel_policies() and
+	 * connection tries to install a bare shunt.
+	 *
+	 * See teardown_ipsec_kernel_policies() and
 	 * ikev1-labeled-ipsec-03-multi-acquires and
 	 * ikev1-labeled-ipsec-01.
 	 */
@@ -350,12 +353,14 @@ bool add_spd_kernel_policy(const struct spd *spd,
 
 	setup_esp_nic_offload(&nic_offload, c, logger);
 	struct kernel_policy kernel_policy =
-		kernel_policy_from_void(spd->local->client, spd->remote->client,
+		kernel_policy_from_void(spd->local->client,
+					spd->remote->client,
 					direction, spd_priority(spd),
 					shunt_kind,
-					spd->connection->config->shunt[shunt_kind],
+					c->config->shunt[shunt_kind],
 					&c->sa_marks, c->ipsec_interface,
 					HUNK_AS_SHUNK(&c->config->sec_label),
+					/*per-cpu*/c->config->child.clones,
 					&nic_offload,
 					where);
 
@@ -445,9 +450,10 @@ bool replace_spd_kernel_policy(const struct spd *spd,
 					direction,
 					spd_priority(spd),
 					shunt_kind,
-					spd->connection->config->shunt[shunt_kind],
+					c->config->shunt[shunt_kind],
 					&c->sa_marks, c->ipsec_interface,
 					HUNK_AS_SHUNK(&c->config->sec_label),
+					/*per-cpu*/c->config->child.clones,
 					&nic_offload,
 					where);
 	return add_kernel_policy(KERNEL_POLICY_OP_REPLACE, direction,
@@ -480,9 +486,10 @@ static bool restore_spd_kernel_policy(const struct spd *spd,
 					direction,
 					spd_priority(spd),
 					shunt_kind,
-					spd->connection->config->shunt[shunt_kind],
+					c->config->shunt[shunt_kind],
 					&c->sa_marks, c->ipsec_interface,
 					HUNK_AS_SHUNK(&c->config->sec_label),
+					/*per-cpu*/c->config->child.clones,
 					&nic_offload,
 					where);
 	return add_kernel_policy(KERNEL_POLICY_OP_REPLACE, direction,
@@ -785,6 +792,7 @@ bool install_bare_kernel_policy(ip_selector src, ip_selector dst,
 					shunt_kind, shunt_policy,
 					/*sa_marks*/NULL, /*xfrmi*/NULL,
 					/*sec_label*/null_shunk,
+					/*per-cpu*/false,
 					nic_offload,
 					where);
 	return kernel_ops_policy_add(KERNEL_POLICY_OP_REPLACE,

@@ -139,6 +139,13 @@ bool kernel_ops_policy_add(enum kernel_policy_op op,
 				jam_sanitized_hunk(buf, policy->sec_label);
 			}
 		}
+
+		if (policy->per_cpu) {
+			LLOG_JAMBUF(DEBUG_STREAM, logger, buf) {
+				jam_string(buf, "routing:  ");
+				jam_string(buf, " per-cpu");
+			}
+		}
 	}
 
 	PASSERT(logger, policy != NULL);

@@ -126,6 +126,10 @@ struct kernel_policy {
 	const struct ipsec_interface *ipsec_interface;
 	enum kernel_policy_id id;
 	/*
+	 * Make the policy per-cpu aware?
+	 */
+	bool per_cpu;
+	/*
 	 * The rules are applied to an outgoing packet in order they
 	 * appear in the rule[] table.  Hence, the output from
 	 * .rule[.nr_rules-1] goes across the wire, and rule[0]
