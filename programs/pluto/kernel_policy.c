@@ -79,7 +79,6 @@ static struct kernel_policy kernel_policy_from_void(ip_selector local, ip_select
 		.remote.client = remote,
 		.remote.route = remote,
 		/* details */
-		.per_cpu = per_cpu,
 		.priority = priority,
 		.kind = shunt_kind,
 		.shunt = shunt_policy,
@@ -88,6 +87,7 @@ static struct kernel_policy kernel_policy_from_void(ip_selector local, ip_select
 		.sa_marks = sa_marks,
 		.ipsec_interface = ipsec_interface,
 		.sec_label = sec_label,
+		.per_cpu = per_cpu,
 		.mode = KERNEL_MODE_TRANSPORT,
 		.nic_offload = *nic_offload,
 	};
@@ -174,6 +174,7 @@ static struct kernel_policy kernel_policy_from_spd(struct kernel_policy_encap po
 		.ipsec_interface = spd->connection->ipsec_interface,
 		.id = DEFAULT_KERNEL_POLICY_ID,
 		.sec_label = HUNK_AS_SHUNK(&spd->connection->config->sec_label),
+		.per_cpu = spd->connection->config->child.clones,
 		.nr_rules = 0,
 	};
 
