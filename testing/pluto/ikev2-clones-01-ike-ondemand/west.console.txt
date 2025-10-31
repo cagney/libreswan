@@ -15,12 +15,8 @@ initdone
 west #
  ipsec route westnet-eastnet
 west #
- taskset 0x1 ../../guestbin/ping-once.sh --up -I 192.0.1.254 192.0.2.254
-down UNEXPECTED
-# ping -n -c 1  -i 6 -w 5   -I 192.0.1.254 192.0.2.254
-PING 192.0.2.254 (192.0.2.254) from 192.0.1.254 : 56(84) bytes of data.
---- 192.0.2.254 ping statistics ---
-1 packets transmitted, 0 received, 100% packet loss, time 0ms
+ taskset 0x2 ../../guestbin/ping-once.sh --fire-and-forget -I 192.0.1.254 192.0.2.254
+fired and forgotten
 west #
  echo done
 done
@@ -37,15 +33,15 @@ src 192.1.2.45 dst 192.1.2.23
 west #
  ipsec _kernel policy
 src 192.0.1.0/24 dst 192.0.2.0/24
-	dir out priority PRIORITY ptype main
+	dir out priority PRIORITY ptype main flag 4
 	tmpl src 192.1.2.45 dst 192.1.2.23
 		proto esp reqid REQID mode tunnel
 src 192.0.2.0/24 dst 192.0.1.0/24
-	dir fwd priority PRIORITY ptype main
+	dir fwd priority PRIORITY ptype main flag 4
 	tmpl src 192.1.2.23 dst 192.1.2.45
 		proto esp reqid REQID mode tunnel
 src 192.0.2.0/24 dst 192.0.1.0/24
-	dir in priority PRIORITY ptype main
+	dir in priority PRIORITY ptype main flag 4
 	tmpl src 192.1.2.23 dst 192.1.2.45
 		proto esp reqid REQID mode tunnel
 west #
