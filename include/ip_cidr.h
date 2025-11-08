@@ -61,6 +61,7 @@ diag_t data_to_cidr(const void *data, size_t data_size, unsigned prefix_len,
 	data_to_cidr((HUNK).ptr, (HUNK).len, PREFIX_LEN, AFI, CIDR)
 
 ip_cidr cidr_from_address(ip_address address);
+ip_cidr cidr_from_address_prefix(ip_address address, unsigned prefix);
 
 /*
  * return why, if CDIR isn't useful.
