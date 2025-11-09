@@ -79,6 +79,7 @@ static void check_iprange_bits(void)
 		}
 
 		ip_range range = range_from_raw(HERE, afi,
+						IP_UNTAINTED,
 						lo.bytes, hi.bytes);
 		int host_len = range_host_len(range);
 		if (host_len != t->host_len) {
@@ -345,6 +346,7 @@ static void check_range_is(void)
 
 		ip_range tmp = (strlen(t->lo) == 0 ? unset_range :
 				range_from_raw(HERE, afi,
+					       IP_UNTAINTED,
 					       lo.bytes, hi.bytes));
 		ip_range *range = &tmp;
 		CHECK_INFO(range);

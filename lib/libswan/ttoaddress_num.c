@@ -221,7 +221,7 @@ static err_t trydotted(shunk_t src, ip_address *dst)
 		return "garbage at end of dotted-address";
 	}
 
-	*dst = address_from_raw(HERE, &ipv4_info, bytes);
+	*dst = address_from_raw(HERE, &ipv4_info, IP_UNTAINTED, bytes);
 	return NULL;
 }
 
@@ -300,6 +300,6 @@ static err_t colon(shunk_t src, ip_address *dst)
 		memset(&u.byte[gapat], '\0', gap);
 	}
 
-	*dst = address_from_raw(HERE, &ipv6_info, u);
+	*dst = address_from_raw(HERE, &ipv6_info, IP_UNTAINTED, u);
 	return NULL;
 }

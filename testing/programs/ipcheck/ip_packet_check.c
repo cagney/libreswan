@@ -70,8 +70,10 @@ void ip_packet_check(void)
 			FAIL("ttoendpoint failed: %s", oops);
 		}
 
-		ip_packet packet = packet_from_raw(HERE,
-						   afi, &src_address.bytes, &dst_address.bytes,
+		ip_packet packet = packet_from_raw(HERE, afi,
+						   IP_UNTAINTED,
+						   &src_address.bytes,
+						   &dst_address.bytes,
 						   t->protocol, src_port, dst_port);
 
 		packet_buf tb;
@@ -83,6 +85,7 @@ void ip_packet_check(void)
 		/* src is a selector */
 		ip_selector packet_src = packet_src_selector(packet);
 		ip_selector src_selector = selector_from_raw(HERE, afi,
+							     IP_UNTAINTED,
 							     src_address.bytes,
 							     src_address.bytes,
 							     t->protocol, src_port);
@@ -96,6 +99,7 @@ void ip_packet_check(void)
 		/* dst is an endpoint */
 		ip_endpoint packet_dst = packet_dst_endpoint(packet);
 		ip_endpoint dst_endpoint = endpoint_from_raw(HERE, afi,
+							     IP_UNTAINTED,
 							     dst_address.bytes,
 							     t->protocol, dst_port);
 		if (!endpoint_eq_endpoint(packet_dst, dst_endpoint)) {

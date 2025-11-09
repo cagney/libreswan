@@ -2148,9 +2148,13 @@ static ip_packet packet_from_xfrm_selector(const struct ip_info *afi,
 
 	struct ip_bytes src_bytes = bytes_from_xfrm_address(afi, &sel->saddr);
 	struct ip_bytes dst_bytes = bytes_from_xfrm_address(afi, &sel->daddr);
-	return packet_from_raw(HERE,
-			       afi, &src_bytes, &dst_bytes,
-			       protocol, ip_nport(sel->sport), ip_nport(sel->dport));
+	return packet_from_raw(HERE, afi,
+			       IP_UNTAINTED,
+			       &src_bytes,
+			       &dst_bytes,
+			       protocol,
+			       ip_nport(sel->sport),
+			       ip_nport(sel->dport));
 }
 
 static const void *nlmsg_data(struct nlmsghdr *n, size_t size, struct logger *logger, where_t where)

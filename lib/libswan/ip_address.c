@@ -27,11 +27,13 @@ const ip_address unset_address; /* all zeros */
 
 ip_address address_from_raw(where_t where,
 			    const struct ip_info *afi,
+			    enum ip_tainted tainted,
 			    const struct ip_bytes bytes)
 {
 	ip_address a = {
 		.ip.is_set = true,
 		.ip.version = afi->ip.version,
+		.ip.tainted = tainted,
 		.bytes = bytes,
 	};
 	pexpect_address(&a, where);
@@ -55,7 +57,9 @@ diag_t data_to_address(const void *data, size_t sizeof_data,
 
 	struct ip_bytes bytes = unset_ip_bytes;
 	memcpy(bytes.byte, data, afi->ip_size);
-	*dst = address_from_raw(HERE, afi, bytes);
+	*dst = address_from_raw(HERE, afi,
+				IP_UNTAINTED,
+				bytes);
 	return NULL;
 }
 
@@ -63,14 +67,18 @@ ip_address address_from_in_addr(const struct in_addr *in)
 {
 	struct ip_bytes bytes = { .byte = { 0, }, };
 	memcpy(bytes.byte, in, sizeof(*in));
-	return address_from_raw(HERE, &ipv4_info, bytes);
+	return address_from_raw(HERE, &ipv4_info,
+				IP_UNTAINTED,
+				bytes);
 }
 
 ip_address address_from_in6_addr(const struct in6_addr *in6)
 {
 	struct ip_bytes bytes = { .byte = { 0, }, };
 	memcpy(bytes.byte, in6, sizeof(*in6));
-	return address_from_raw(HERE, &ipv6_info, bytes);
+	return address_from_raw(HERE, &ipv6_info,
+				IP_UNTAINTED,
+				bytes);
 }
 
 const struct ip_info *address_type(const ip_address *address)

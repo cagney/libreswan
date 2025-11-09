@@ -27,11 +27,18 @@
 struct ip_info;
 struct jambuf;
 
+/*
+ * Anything non-zero taints an IP address.
+ */
+enum ip_tainted {
+	IP_UNTAINTED = 0,
+};
+
 struct ip_base {
 	bool is_set;
 #define ip_is_set(IP) ((IP) != NULL && (IP)->ip.is_set)
 #define ip_is_unset(IP) ((IP) == NULL || !(IP)->ip.is_set)
-
+	enum ip_tainted tainted:8;
 	enum ip_version version:8; /* 0, IPv4(4), IPv6(6) */
 };
 

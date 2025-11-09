@@ -26,6 +26,7 @@ const ip_cidr unset_cidr;
 
 ip_cidr cidr_from_raw(where_t where,
 		      const struct ip_info *afi,
+		      enum ip_tainted tainted,
 		      const struct ip_bytes bytes,
 		      unsigned prefix_len)
 {
@@ -34,6 +35,7 @@ ip_cidr cidr_from_raw(where_t where,
 	ip_cidr cidr = {
 		.ip.is_set = true,
 		.ip.version = afi->ip.version,
+		.ip.tainted = tainted,
 		.bytes = bytes,
 		.prefix_len = prefix_len,
 	};
@@ -42,7 +44,7 @@ ip_cidr cidr_from_raw(where_t where,
 }
 
 diag_t data_to_cidr(const void *data, size_t sizeof_data, unsigned prefix_len,
-		       const struct ip_info *afi, ip_cidr *dst)
+		    const struct ip_info *afi, ip_cidr *dst)
 {
 	*dst = unset_cidr;
 
@@ -63,7 +65,9 @@ diag_t data_to_cidr(const void *data, size_t sizeof_data, unsigned prefix_len,
 
 	struct ip_bytes bytes = unset_ip_bytes;
 	memcpy(bytes.byte, data, afi->ip_size);
-	*dst = cidr_from_raw(HERE, afi, bytes, prefix_len);
+	*dst = cidr_from_raw(HERE, afi,
+			     IP_UNTAINTED,
+			     bytes, prefix_len);
 	return NULL;
 }
 
@@ -75,7 +79,9 @@ ip_cidr cidr_from_address(ip_address address)
 	}
 
 	/* contains both routing-prefix and host-identifier */
-	return cidr_from_raw(HERE, afi, address.bytes,
+	return cidr_from_raw(HERE, afi,
+			     address.ip.tainted,
+			     address.bytes,
 			     afi->mask_cnt/*32|128*/);
 
 }
@@ -99,7 +105,9 @@ ip_address cidr_address(const ip_cidr cidr)
 		return unset_address;
 	}
 
-	return address_from_raw(HERE, afi, cidr.bytes);
+	return address_from_raw(HERE, afi,
+				cidr.ip.tainted,
+				cidr.bytes);
 }
 
 ip_address cidr_prefix(const ip_cidr cidr)
@@ -109,6 +117,7 @@ ip_address cidr_prefix(const ip_cidr cidr)
 		return unset_address;
 	}
 	return address_from_raw(HERE, afi,
+				cidr.ip.tainted,
 				ip_bytes_blit(afi, cidr.bytes,
 					      &keep_routing_prefix,
 					      &clear_host_identifier,

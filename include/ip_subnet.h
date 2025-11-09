@@ -64,7 +64,9 @@ void pexpect_subnet(const ip_subnet *s, where_t where);
  * Constructors
  */
 
-ip_subnet subnet_from_raw(where_t where, const struct ip_info *afi,
+ip_subnet subnet_from_raw(where_t where,
+			  const struct ip_info *afi,
+			  enum ip_tainted tainted,
 			  const struct ip_bytes prefix,
 			  unsigned prefix_length);
 

@@ -59,9 +59,10 @@ err_t ttopool_num(shunk_t input, const struct ip_info *afi, ip_pool *dst)
 	{
 		/* single address */
 		*dst = pool_from_raw(HERE, afi,
-				      start_address.bytes,
-				      start_address.bytes,
-				      afi->mask_cnt);
+				     IP_UNTAINTED,
+				     start_address.bytes,
+				     start_address.bytes,
+				     afi->mask_cnt);
 		return NULL;
 	}
 	case '/':
@@ -100,15 +101,16 @@ err_t ttopool_num(shunk_t input, const struct ip_info *afi, ip_pool *dst)
 
 		/* XXX: should this reject bad addresses */
 		*dst = pool_from_raw(HERE, afi,
-				      ip_bytes_blit(afi, start_address.bytes,
-						    &keep_routing_prefix,
-						    &clear_host_identifier,
-						    prefix),
-				      ip_bytes_blit(afi, start_address.bytes,
-						    &keep_routing_prefix,
-						    &set_host_identifier,
-						    prefix),
-				      subprefix);
+				     IP_UNTAINTED,
+				     ip_bytes_blit(afi, start_address.bytes,
+						   &keep_routing_prefix,
+						   &clear_host_identifier,
+						   prefix),
+				     ip_bytes_blit(afi, start_address.bytes,
+						   &keep_routing_prefix,
+						   &set_host_identifier,
+						   prefix),
+				     subprefix);
 		return NULL;
 	}
 	case '-':
@@ -126,9 +128,10 @@ err_t ttopool_num(shunk_t input, const struct ip_info *afi, ip_pool *dst)
 			return "start of pool is greater than end";
 		}
 		*dst = pool_from_raw(HERE, afi,
-				      start_address.bytes,
-				      end_address.bytes,
-				      afi->mask_cnt);
+				     IP_UNTAINTED,
+				     start_address.bytes,
+				     end_address.bytes,
+				     afi->mask_cnt);
 		return NULL;
 	}
 	default:

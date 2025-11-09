@@ -33,13 +33,15 @@
 const ip_pool unset_pool; /* all zeros */
 
 ip_pool pool_from_raw(where_t where, const struct ip_info *afi,
-			const struct ip_bytes lo,
-			const struct ip_bytes hi,
-			unsigned subprefix)
+		      enum ip_tainted tainted,
+		      const struct ip_bytes lo,
+		      const struct ip_bytes hi,
+		      unsigned subprefix)
 {
 	ip_pool r = {
 		.ip.is_set = true,
 		.ip.version = afi->ip.version,
+		.ip.tainted = tainted,
 		.lo = lo,
 		.hi = hi,
 		.subprefix = subprefix,
@@ -107,8 +109,9 @@ ip_pool pool_from_address(const ip_address address)
 	}
 
 	return pool_from_raw(HERE, afi,
-			      address.bytes, address.bytes,
-			      afi->mask_cnt);
+			     address.ip.tainted,
+			     address.bytes, address.bytes,
+			     afi->mask_cnt);
 }
 
 ip_pool pool_from_cidr(const ip_cidr cidr)
@@ -120,15 +123,16 @@ ip_pool pool_from_cidr(const ip_cidr cidr)
 	}
 
 	return pool_from_raw(HERE, afi,
-			      ip_bytes_blit(afi, cidr.bytes,
-					    &keep_routing_prefix,
-					    &clear_host_identifier,
-					    cidr.prefix_len),
-			      ip_bytes_blit(afi, cidr.bytes,
-					    &keep_routing_prefix,
-					    &set_host_identifier,
-					    cidr.prefix_len),
-			      afi->mask_cnt);
+			     cidr.ip.tainted,
+			     ip_bytes_blit(afi, cidr.bytes,
+					   &keep_routing_prefix,
+					   &clear_host_identifier,
+					   cidr.prefix_len),
+			     ip_bytes_blit(afi, cidr.bytes,
+					   &keep_routing_prefix,
+					   &set_host_identifier,
+					   cidr.prefix_len),
+			     afi->mask_cnt);
 }
 
 ip_pool pool_from_subnet(const ip_subnet subnet)
@@ -140,15 +144,16 @@ ip_pool pool_from_subnet(const ip_subnet subnet)
 	}
 
 	return pool_from_raw(HERE, afi,
-			      ip_bytes_blit(afi, subnet.bytes,
-					    &keep_routing_prefix,
-					    &clear_host_identifier,
-					    subnet.maskbits),
-			      ip_bytes_blit(afi, subnet.bytes,
-					    &keep_routing_prefix,
-					    &set_host_identifier,
-					    subnet.maskbits),
-			      afi->mask_cnt);
+			     subnet.ip.tainted,
+			     ip_bytes_blit(afi, subnet.bytes,
+					   &keep_routing_prefix,
+					   &clear_host_identifier,
+					   subnet.maskbits),
+			     ip_bytes_blit(afi, subnet.bytes,
+					   &keep_routing_prefix,
+					   &set_host_identifier,
+					   subnet.maskbits),
+			     afi->mask_cnt);
 }
 
 ip_pool pool_from_range(const ip_range range)
@@ -160,6 +165,7 @@ ip_pool pool_from_range(const ip_range range)
 	}
 
 	return pool_from_raw(HERE, afi,
+			     range.ip.tainted,
 			     range.lo, range.hi,
 			     afi->mask_cnt);
 }
@@ -309,7 +315,9 @@ ip_address pool_start(const ip_pool pool)
 		return unset_address;
 	}
 
-	return address_from_raw(HERE, afi, pool.lo);
+	return address_from_raw(HERE, afi,
+				pool.ip.tainted,
+				pool.lo);
 }
 
 ip_address pool_end(const ip_pool pool)
@@ -319,7 +327,9 @@ ip_address pool_end(const ip_pool pool)
 		return unset_address;
 	}
 
-	return address_from_raw(HERE, afi, pool.hi);
+	return address_from_raw(HERE, afi,
+				pool.ip.tainted,
+				pool.hi);
 }
 
 bool pool_overlaps_pool(const ip_pool l, const ip_pool r)
@@ -374,8 +384,9 @@ err_t addresses_to_nonzero_pool(const ip_address lo, const ip_address hi, ip_poo
 	}
 
 	*dst = pool_from_raw(HERE, lo_afi,
-			      lo.bytes, hi.bytes,
-			      lo_afi->mask_cnt);
+			     (lo.ip.tainted | hi.ip.tainted),
+			     lo.bytes, hi.bytes,
+			     lo_afi->mask_cnt);
 	return NULL;
 }
 
@@ -397,7 +408,9 @@ err_t pool_to_subnet(const ip_pool pool, ip_subnet *dst)
 		return "address pool is not a subnet";
 	}
 
-	*dst = subnet_from_raw(HERE, afi, pool.lo, prefix_bits);
+	*dst = subnet_from_raw(HERE, afi,
+			       pool.ip.tainted,
+			       pool.lo, prefix_bits);
 	return NULL;
 }
 
@@ -425,7 +438,10 @@ err_t pool_offset_to_cidr(const ip_pool pool,
 		return e;
 	}
 
-	ip_cidr cidr = cidr_from_raw(HERE, afi, sum, pool.subprefix);
+	ip_cidr cidr = cidr_from_raw(HERE, afi,
+				     pool.ip.tainted,
+				     sum,
+				     pool.subprefix);
 	if (!cidr_in_pool(cidr, pool)) {
 		return "pool overflow";
 	}

@@ -25,6 +25,7 @@ const ip_packet unset_packet;
 ip_packet packet_from_raw(where_t where,
 			  /* INFO determines meaning of BYTES */
 			  const struct ip_info *afi,
+			  enum ip_tainted tainted,
 			  const struct ip_bytes *src_bytes,
 			  const struct ip_bytes *dst_bytes,
 			  /* PROTOCOL determines meaning of PORTs */
@@ -34,6 +35,7 @@ ip_packet packet_from_raw(where_t where,
 	ip_packet packet = {
 		.ip.is_set = true,
 		.ip.version = afi->ip.version,
+		.ip.tainted = tainted,
 		.ipproto = protocol->ipproto,
 		.src = {
 			.bytes = *src_bytes,
@@ -83,7 +85,9 @@ ip_address packet_src_address(const ip_packet packet)
 		return unset_address;
 	}
 
-	return address_from_raw(HERE, afi, packet.src.bytes);
+	return address_from_raw(HERE, afi,
+				packet.ip.tainted,
+				packet.src.bytes);
 }
 
 ip_address packet_dst_address(const ip_packet packet)
@@ -94,7 +98,9 @@ ip_address packet_dst_address(const ip_packet packet)
 		return unset_address;
 	}
 
-	return address_from_raw(HERE, afi, packet.dst.bytes);
+	return address_from_raw(HERE, afi,
+				packet.ip.tainted,
+				packet.dst.bytes);
 }
 
 ip_endpoint packet_dst_endpoint(const ip_packet packet)
@@ -106,6 +112,7 @@ ip_endpoint packet_dst_endpoint(const ip_packet packet)
 	}
 
 	return endpoint_from_raw(HERE, afi,
+				 packet.ip.tainted,
 				 packet.dst.bytes,
 				 protocol_from_ipproto(packet.ipproto),
 				 ip_hport(packet.dst.hport));
@@ -120,6 +127,7 @@ ip_selector packet_src_selector(const ip_packet packet)
 	}
 
 	return selector_from_raw(HERE, afi,
+				 packet.ip.tainted,
 				 packet.src.bytes,
 				 packet.src.bytes,
 				 protocol_from_ipproto(packet.ipproto),
@@ -135,6 +143,7 @@ ip_selector packet_dst_selector(const ip_packet packet)
 	}
 
 	return selector_from_raw(HERE, afi,
+				 packet.ip.tainted,
 				 packet.dst.bytes,
 				 packet.dst.bytes,
 				 protocol_from_ipproto(packet.ipproto),
