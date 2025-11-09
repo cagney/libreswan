@@ -1722,6 +1722,7 @@ static void parse_sadb_acquire(const struct sadb_msg *msg,
 
 	ip_packet packet = packet_from_raw(HERE,
 					   address_info(src_address),
+					   IP_UNTAINTED,
 					   &src_address.bytes,
 					   &dst_address.bytes,
 					   &ip_protocol_all,

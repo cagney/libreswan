@@ -86,7 +86,9 @@ extern const ip_said unset_said;
  * unfortunately code still passes around address+protocol+[port].
  */
 
-ip_said said_from_raw(where_t where, const struct ip_info *afi,
+ip_said said_from_raw(where_t where,
+		      const struct ip_info *afi,
+		      enum ip_tainted tainted,
 		      const struct ip_bytes bytes,
 		      const struct ip_protocol *protocol,
 		      /*ip_port port,*/

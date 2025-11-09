@@ -157,6 +157,7 @@ err_t ttoselector_num(shunk_t cursor,
 	/* check host-part is zero */
 
 	*dst = selector_from_raw(HERE, afi,
+				 IP_UNTAINTED,
 				 routing_prefix, hi,
 				 protocol, port);
 	return NULL;

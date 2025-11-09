@@ -32,13 +32,16 @@
 
 const ip_range unset_range; /* all zeros */
 
-ip_range range_from_raw(where_t where, const struct ip_info *afi,
+ip_range range_from_raw(where_t where,
+			const struct ip_info *afi,
+			enum ip_tainted tainted,
 			const struct ip_bytes lo,
 			const struct ip_bytes hi)
 {
 	ip_range r = {
 		.ip.is_set = true,
 		.ip.version = afi->ip.version,
+		.ip.tainted = tainted,
 		.lo = lo,
 		.hi = hi,
 	};
@@ -101,6 +104,7 @@ ip_range range_from_address(const ip_address address)
 	}
 
 	return range_from_raw(HERE, afi,
+			      address.ip.tainted,
 			      address.bytes, address.bytes);
 }
 
@@ -113,6 +117,7 @@ ip_range range_from_cidr(const ip_cidr cidr)
 	}
 
 	return range_from_raw(HERE, afi,
+			      cidr.ip.tainted,
 			      ip_bytes_blit(afi, cidr.bytes,
 					    &keep_routing_prefix,
 					    &clear_host_identifier,
@@ -132,6 +137,7 @@ ip_range range_from_subnet(const ip_subnet subnet)
 	}
 
 	return range_from_raw(HERE, afi,
+			      subnet.ip.tainted,
 			      ip_bytes_blit(afi, subnet.bytes,
 					    &keep_routing_prefix,
 					    &clear_host_identifier,
@@ -287,7 +293,9 @@ ip_address range_start(const ip_range range)
 		return unset_address;
 	}
 
-	return address_from_raw(HERE, afi, range.lo);
+	return address_from_raw(HERE, afi,
+				range.ip.tainted,
+				range.lo);
 }
 
 ip_address range_end(const ip_range range)
@@ -297,7 +305,9 @@ ip_address range_end(const ip_range range)
 		return unset_address;
 	}
 
-	return address_from_raw(HERE, afi, range.hi);
+	return address_from_raw(HERE, afi,
+				range.ip.tainted,
+				range.hi);
 }
 
 bool range_overlaps_range(const ip_range l, const ip_range r)
@@ -352,6 +362,7 @@ err_t addresses_to_nonzero_range(const ip_address lo, const ip_address hi, ip_ra
 	}
 
 	*dst = range_from_raw(HERE, lo_afi,
+			      (lo.ip.tainted | hi.ip.tainted),
 			      lo.bytes, hi.bytes);
 	return NULL;
 }
@@ -374,7 +385,9 @@ err_t range_to_subnet(const ip_range range, ip_subnet *dst)
 		return "address range is not a subnet";
 	}
 
-	*dst = subnet_from_raw(HERE, afi, range.lo, prefix_bits);
+	*dst = subnet_from_raw(HERE, afi,
+			       range.ip.tainted,
+			       range.lo, prefix_bits);
 	return NULL;
 }
 

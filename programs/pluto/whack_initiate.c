@@ -114,8 +114,8 @@ void whack_acquire(const struct whack_message *wm, struct show *s)
 	ip_port local_port = (wa->local.port.ip.is_set ? wa->local.port : ip_hport(8));
 	ip_port remote_port = (wa->remote.port.ip.is_set ? wa->remote.port : ip_hport(0));
 
-	ip_packet packet = packet_from_raw(HERE,
-					   address_info(wa->local.address),
+	ip_packet packet = packet_from_raw(HERE, address_info(wa->local.address),
+					   IP_UNTAINTED/*?!?*/,
 					   &wa->local.address.bytes,
 					   &wa->remote.address.bytes,
 					   protocol,

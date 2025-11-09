@@ -27,6 +27,7 @@ const ip_endpoint unset_endpoint; /* all zeros */
 
 ip_endpoint endpoint_from_raw(where_t where,
 			      const struct ip_info *afi,
+			      enum ip_tainted tainted,
 			      const struct ip_bytes bytes,
 			      const struct ip_protocol *protocol,
 			      ip_port port)
@@ -34,6 +35,7 @@ ip_endpoint endpoint_from_raw(where_t where,
 	ip_endpoint endpoint = {
 		.ip.is_set = true,
 		.ip.version = afi->ip.version,
+		.ip.tainted = tainted,
 		.bytes = bytes,
 		.hport = port.hport,
 		.ipproto = protocol->ipproto,
@@ -52,7 +54,9 @@ ip_endpoint endpoint_from_address_protocol_port(const ip_address address,
 		return unset_endpoint; /* empty_address? */
 	}
 
-	return endpoint_from_raw(HERE, afi, address.bytes,
+	return endpoint_from_raw(HERE, afi,
+				 address.ip.tainted,
+				 address.bytes,
 				 protocol, port);
 }
 
@@ -64,7 +68,9 @@ ip_address endpoint_address(const ip_endpoint endpoint)
 		return unset_address; /* empty_address? */
 	}
 
-	return address_from_raw(HERE, afi, endpoint.bytes);
+	return address_from_raw(HERE, afi,
+				endpoint.ip.tainted,
+				endpoint.bytes);
 }
 
 int endpoint_hport(const ip_endpoint endpoint)

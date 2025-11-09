@@ -24,6 +24,7 @@ const ip_said unset_said;
 
 ip_said said_from_raw(where_t where UNUSED,
 		      const struct ip_info *afi,
+		      enum ip_tainted tainted,
 		      const struct ip_bytes dst,
 		      const struct ip_protocol *protocol,
 		      ipsec_spi_t spi)
@@ -31,6 +32,7 @@ ip_said said_from_raw(where_t where UNUSED,
 	ip_said said = {
 		.ip.is_set = true,
 		.ip.version = afi->ip.version,
+		.ip.tainted = tainted,
 		.dst = dst,
 		.ipproto = protocol->ipproto,
 		.spi = spi,
@@ -49,7 +51,9 @@ ip_said said_from_address_protocol_spi(const ip_address address,
 		return unset_said;
 	}
 
-	return said_from_raw(HERE, afi, address.bytes,
+	return said_from_raw(HERE, afi,
+			     address.ip.tainted,
+			     address.bytes,
 			     protocol, spi);
 }
 
@@ -120,7 +124,9 @@ ip_address said_address(const ip_said said)
 		return unset_address; /* empty_address? */
 	}
 
-	return address_from_raw(HERE, afi, said.dst);
+	return address_from_raw(HERE, afi,
+				said.ip.tainted,
+				said.dst);
 }
 
 const struct ip_protocol *said_protocol(const ip_said said)

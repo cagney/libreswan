@@ -27,12 +27,14 @@ const ip_subnet unset_subnet; /* all zeros */
 
 ip_subnet subnet_from_raw(where_t where,
 			  const struct ip_info *afi,
+			  enum ip_tainted tainted,
 			  const struct ip_bytes bytes,
 			  unsigned prefix_len)
 {
 	ip_subnet s = {
 		.ip.is_set = true,
 		.ip.version = afi->ip.version,
+		.ip.tainted = tainted,
 		.bytes = bytes,
 		.maskbits = prefix_len,
 	};
@@ -47,7 +49,10 @@ ip_subnet subnet_from_address(const ip_address address)
 		return unset_subnet;
 	}
 
-	return subnet_from_raw(HERE, afi, address.bytes, afi->mask_cnt);
+	return subnet_from_raw(HERE, afi,
+			       address.ip.tainted,
+			       address.bytes,
+			       afi->mask_cnt);
 }
 
 ip_subnet subnet_from_cidr(const ip_cidr cidr)
@@ -58,6 +63,7 @@ ip_subnet subnet_from_cidr(const ip_cidr cidr)
 	}
 
 	return subnet_from_raw(HERE, afi,
+			       cidr.ip.tainted,
 			       ip_bytes_blit(afi, cidr.bytes,
 					     &keep_routing_prefix,
 					     &clear_host_identifier,
@@ -88,7 +94,9 @@ err_t address_mask_to_subnet(const ip_address address,
 					       &keep_routing_prefix,
 					       &clear_host_identifier,
 					       prefix_len);
-	*subnet = subnet_from_raw(HERE, afi, prefix, prefix_len);
+	*subnet = subnet_from_raw(HERE, afi,
+				  (address.ip.tainted | mask.ip.tainted),
+				  prefix, prefix_len);
 	return NULL;
 }
 
@@ -104,7 +112,9 @@ ip_address subnet_prefix(const ip_subnet subnet)
 					       &keep_routing_prefix,
 					       &clear_host_identifier,
 					       subnet.maskbits);
-	return address_from_raw(HERE, afi, prefix);
+	return address_from_raw(HERE, afi,
+				subnet.ip.tainted,
+				prefix);
 }
 
 const struct ip_info *subnet_type(const ip_subnet *subnet)
@@ -170,7 +180,9 @@ ip_address subnet_prefix_mask(const ip_subnet subnet)
 					     &set_routing_prefix,
 					     &clear_host_identifier,
 					     subnet.maskbits);
-	return address_from_raw(HERE, afi, mask);
+	return address_from_raw(HERE, afi,
+				subnet.ip.tainted,
+				mask);
 }
 
 unsigned subnet_prefix_bits(const ip_subnet subnet)

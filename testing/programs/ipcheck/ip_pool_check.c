@@ -79,8 +79,9 @@ static void check_ippool_bits(void)
 		}
 
 		ip_pool pool = pool_from_raw(HERE, afi,
-						lo.bytes, hi.bytes,
-						afi->mask_cnt);
+					     IP_UNTAINTED,
+					     lo.bytes, hi.bytes,
+					     afi->mask_cnt);
 		int host_len = pool_host_len(pool);
 		if (host_len != t->host_len) {
 			FAIL("pool_host_len(pool) returned '%d', expected '%d'",
@@ -354,8 +355,9 @@ static void check_pool_is(void)
 
 		ip_pool tmp = (strlen(t->lo) == 0 ? unset_pool :
 				pool_from_raw(HERE, afi,
-					       lo.bytes, hi.bytes,
-					       afi->mask_cnt));
+					      IP_UNTAINTED,
+					      lo.bytes, hi.bytes,
+					      afi->mask_cnt));
 		ip_pool *pool = &tmp;
 		CHECK_INFO(pool);
 		CHECK_STR2(pool);

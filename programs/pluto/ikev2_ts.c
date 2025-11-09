@@ -474,6 +474,7 @@ static ip_selector impair_selector_to_subnet(ip_selector ts)
 {
 	const struct ip_info *afi = selector_info(ts);
 	return selector_from_raw(HERE, afi,
+				 ts.ip.tainted,
 				 ts.lo, ts.lo,
 				 selector_protocol(ts),
 				 selector_port(ts));
@@ -484,6 +485,7 @@ static ip_selector impair_selector_to_supernet(ip_selector ts)
 {
 	const struct ip_info *afi = selector_info(ts);
 	return selector_from_raw(HERE, afi,
+				 ts.ip.tainted,
 				 unset_ip_bytes, unset_ip_bytes,
 				 selector_protocol(ts),
 				 selector_port(ts));

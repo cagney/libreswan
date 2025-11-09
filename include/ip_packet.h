@@ -63,6 +63,7 @@ void pexpect_packet(const ip_packet *s, where_t where);
 ip_packet packet_from_raw(where_t where,
 			  /* AFI determines meaning of ... */
 			  const struct ip_info *afi,
+			  enum ip_tainted tainted,
 			  /* ... BYTES */
 			  const struct ip_bytes *src_bytes,
 			  const struct ip_bytes *dst_bytes,

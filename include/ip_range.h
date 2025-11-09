@@ -42,7 +42,9 @@ typedef struct {
 void pexpect_range(const ip_range *r, where_t where);
 
 /* caller knows best */
-ip_range range_from_raw(where_t where, const struct ip_info *afi,
+ip_range range_from_raw(where_t where,
+			const struct ip_info *afi,
+			enum ip_tainted tainted,
 			const struct ip_bytes start,
 			const struct ip_bytes end);
 

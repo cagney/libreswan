@@ -73,7 +73,9 @@ typedef struct {
 
 void pexpect_selector(const ip_selector *s, where_t where);
 
-ip_selector selector_from_raw(where_t where, const struct ip_info *afi,
+ip_selector selector_from_raw(where_t where,
+			      const struct ip_info *afi,
+			      enum ip_tainted tainted,
 			      const struct ip_bytes lo,
 			      const struct ip_bytes hi,
 			      const struct ip_protocol *protocol, const ip_port port);

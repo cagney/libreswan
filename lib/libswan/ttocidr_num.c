@@ -59,6 +59,7 @@ err_t ttocidr_num(shunk_t src, const struct ip_info *afi, ip_cidr *cidr)
 	}
 
 	/* combine */
-	*cidr = cidr_from_raw(HERE, afi, addr.bytes, prefix_len);
+	*cidr = cidr_from_raw(HERE, afi, IP_UNTAINTED,
+			      addr.bytes, prefix_len);
 	return NULL;
 }

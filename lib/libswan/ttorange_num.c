@@ -59,6 +59,7 @@ err_t ttorange_num(shunk_t input, const struct ip_info *afi, ip_range *dst)
 	{
 		/* single address */
 		*dst = range_from_raw(HERE, afi,
+				      IP_UNTAINTED,
 				      start_address.bytes,
 				      start_address.bytes);
 		return NULL;
@@ -78,6 +79,7 @@ err_t ttorange_num(shunk_t input, const struct ip_info *afi, ip_range *dst)
 
 		/* XXX: should this reject bad addresses */
 		*dst = range_from_raw(HERE, afi,
+				      IP_UNTAINTED,
 				      ip_bytes_blit(afi, start_address.bytes,
 						    &keep_routing_prefix,
 						    &clear_host_identifier,
@@ -103,6 +105,7 @@ err_t ttorange_num(shunk_t input, const struct ip_info *afi, ip_range *dst)
 			return "start of range is greater than end";
 		}
 		*dst = range_from_raw(HERE, afi,
+				      IP_UNTAINTED,
 				      start_address.bytes,
 				      end_address.bytes);
 		return NULL;
