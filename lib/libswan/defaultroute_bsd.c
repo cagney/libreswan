@@ -267,6 +267,7 @@ static enum route_status get_route_1(int s,
 
 	route->gateway = gateway;
 	route->source = ifa;
+	route->interface = interface_index;
 
 	/* unpack */
 	return ROUTE_SUCCESS;
