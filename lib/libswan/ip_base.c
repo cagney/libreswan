@@ -16,6 +16,7 @@
 #include "ip_base.h"
 #include "jambuf.h"
 #include "ip_info.h"
+#include "lswlog.h"
 
 size_t jam_ip_invalid(struct jambuf *buf,
 		      const char *what,
@@ -62,6 +63,11 @@ size_t jam_ip_invalid(struct jambuf *buf,
 
 	if ((*afi)->af == AF_UNSPEC) {
 		return jam(buf, "<unspecified-%s>", what);
+	}
+
+	if (LDBGP(DBG_TAINT, &global_logger) && ip->tainted) {
+		return jam(buf, "<%s-%s-%d>",
+			   (*afi)->ip_name, what, ip->tainted);
 	}
 
 	return 0;
