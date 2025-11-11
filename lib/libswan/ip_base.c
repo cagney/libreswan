@@ -28,24 +28,36 @@ size_t jam_ip_invalid(struct jambuf *buf,
 		return jam(buf, "<null-%s>", what);
 	}
 
+	/*
+	 * When log-ip=no, give little away; its intended as a backup
+	 * for a missing sensitive call.
+	 */
+	if (ip->tainted && !log_ip) {
+		return jam(buf, "<tainted-%s>", what);
+	}
+
+	/*
+	 * Unset IPs can still have a valid .version.  But truely
+	 * unset IPs cannot.
+	 */
 	(*afi) = ip_version_info(ip->version);
+	if ((*afi) == NULL) {
+		/* should be unset as well */
+		if (ip->is_set) {
+			return jam(buf, "<set-yet-unset-%s>", what);
+		}
+		return jam(buf, "<unset-%s>", what);
+	}
 
 	if (!ip->is_set) {
 		size_t s = 0;
 		s += jam_string(buf, "<unset");
-		if (*afi != NULL) {
-			s += jam_string(buf, "-");
-			s += jam_string(buf, (*afi)->ip_name);
-
-		}
+		s += jam_string(buf, "-");
+		s += jam_string(buf, (*afi)->ip_name);
 		s += jam_string(buf, "-");
 		s += jam_string(buf, what);
 		s += jam_string(buf, ">");
 		return s;
-	}
-
-	if (*afi == NULL) {
-		return jam(buf, "<unknown-%s>", what);
 	}
 
 	if ((*afi)->af == AF_UNSPEC) {
@@ -60,15 +72,20 @@ size_t jam_ip_sensitive(struct jambuf *buf,
 		      const struct ip_base *ip,
 		      const struct ip_info **afi)
 {
-	size_t s = jam_ip_invalid(buf, what, ip, afi);
-	if (s > 0) {
-		return s;
-	}
-
+	/*
+	 * Check for sensitive first; so that tainted only kicks in
+	 * when a sensitive call is missing.
+	 */
 	if (!log_ip) {
+		size_t s = 0;
 		s += jam_string(buf, "<");
 		s += jam_string(buf, what);
 		s += jam_string(buf, ">");
+		return s;
+	}
+
+	size_t s = jam_ip_invalid(buf, what, ip, afi);
+	if (s > 0) {
 		return s;
 	}
 
