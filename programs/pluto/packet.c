@@ -3070,6 +3070,7 @@ diag_t pbs_in_address(struct pbs_in *input_pbs,
 			return d;
 		}
 		*address = address_from_in_addr(&ip);
+		ip_tainted(address);
 		return NULL;
 	}
 	case AF_INET6:
@@ -3081,6 +3082,7 @@ diag_t pbs_in_address(struct pbs_in *input_pbs,
 			return d;
 		}
 		*address = address_from_in6_addr(&ip);
+		ip_tainted(address);
 		return NULL;
 	}
 	default:
