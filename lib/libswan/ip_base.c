@@ -13,6 +13,8 @@
  * License for more details.
  */
 
+#include <pthread.h>	/* must be first?!? */
+
 #include "ip_base.h"
 #include "jambuf.h"
 #include "ip_info.h"
@@ -96,4 +98,17 @@ size_t jam_ip_sensitive(struct jambuf *buf,
 	}
 
 	return 0;
+}
+
+void taint_ip(struct ip_base *ip)
+{
+	static pthread_mutex_t taint_mutex = PTHREAD_MUTEX_INITIALIZER;
+	pthread_mutex_lock(&taint_mutex);
+	{
+		static enum ip_tainted taint;
+		ip->tainted = (taint >= IP_TAINTED_MAX ? IP_TAINTED_MAX :
+			       ++taint);
+	}
+	pthread_mutex_unlock(&taint_mutex);
+
 }

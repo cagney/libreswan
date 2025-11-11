@@ -32,6 +32,7 @@ struct jambuf;
  */
 enum ip_tainted {
 	IP_UNTAINTED = 0,
+	IP_TAINTED_MAX = 255,
 };
 
 struct ip_base {
@@ -65,5 +66,8 @@ size_t jam_ip_invalid(struct jambuf *buf, const char *what,
 size_t jam_ip_sensitive(struct jambuf *buf, const char *what,
 			const struct ip_base *ip,
 			const struct ip_info **afi);
+
+#define ip_tainted(IP) taint_ip(&(IP)->ip)
+void taint_ip(struct ip_base *ip);
 
 #endif
