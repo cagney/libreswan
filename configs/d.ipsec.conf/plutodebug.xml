@@ -129,6 +129,30 @@
 
 	<varlistentry>
 	  <term>
+	    <option>taint</option>
+	  </term>
+	  <listitem>
+	    <para>
+	      (Experimental) Pluto, internally, marks a very limited
+	      set of peer addresses as tainted.  When
+	      <option>taint</option> is enabled, those addresses will
+	      be logged using the form
+	      <computeroutput>&lt;IPv<replaceable>4|6</replaceable>-address-<replaceable>N</replaceable>&gt;</computeroutput>,
+	      (where <replaceable>N</replaceable> is a saturated
+	      counter).
+	    </para>
+	    <note>
+	      <para>
+		This debug option is not intented to obfuscate
+		addresses.  To obfuscate peer addresses see
+		<option>logip=no</option>.
+	      </para>
+	    </note>
+	  </listitem>
+	</varlistentry>
+
+	<varlistentry>
+	  <term>
 	    <option>tmi</option>
 	  </term>
 	  <listitem>
