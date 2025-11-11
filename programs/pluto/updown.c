@@ -118,8 +118,25 @@ static bool fmt_common_shell_out(char *buf, size_t blen,
 #	define JDunsigned(NAME, U) JD(NAME, "%u", U)
 #	define JDint(NAME, I)      JD(NAME, "%d", I)
 #	define JDuint64(NAME, U)   JD(NAME, "%"PRIu64, U)
-#	define JDipaddr(name, addr)					\
-	JDemitter(name, { ip_address ta = addr; jam_address(&jb, &ta); } )
+
+#	define JD_address(NAME, ADDR)			\
+	{						\
+		ip_address jd = ADDR;			\
+		jd.ip.tainted = 0;			\
+		JDemitter(NAME, jam_address(&jb, &jd));	\
+	}
+#	define JD_cidr(NAME, CIDR)			\
+	{						\
+		ip_cidr jd = CIDR;			\
+		jd.ip.tainted = 0;			\
+		JDemitter(NAME, jam_cidr(&jb, &jd));	\
+	}
+#	define JD_selector_range(NAME, SELECTOR)	\
+	{						\
+		ip_range jd = selector_range(SELECTOR);	\
+		jd.ip.tainted = 0;			\
+		JDemitter(NAME, jam_range(&jb, &jd));	\
+	}
 
 	JD("PLUTO_VERB", "%s%s", verb, verb_suffix);
 
@@ -130,22 +147,22 @@ static bool fmt_common_shell_out(char *buf, size_t blen,
 	JDstr("PLUTO_XFRMI_ROUTE",  (c->ipsec_interface != NULL && c->ipsec_interface->if_id > 0) ? "yes" : "");
 
 	if (address_is_specified(sr->local->host->nexthop)) {
-		JDipaddr("PLUTO_NEXT_HOP", sr->local->host->nexthop);
+		JD_address("PLUTO_NEXT_HOP", sr->local->host->nexthop);
 	}
 
-	JDipaddr("PLUTO_ME", sr->local->host->addr);
+	JD_address("PLUTO_ME", sr->local->host->addr);
 	JDemitter("PLUTO_MY_ID", jam_id_bytes(&jb, &c->local->host.id, jam_shell_quoted_bytes));
 	JD("PLUTO_CLIENT_FAMILY", "ipv%s", selector_info(sr->local->client)->n_name);
-	JDemitter("PLUTO_MY_CLIENT", jam_selector_range(&jb, &sr->local->client));
-	JDipaddr("PLUTO_MY_CLIENT_NET", selector_prefix(sr->local->client));
-	JDipaddr("PLUTO_MY_CLIENT_MASK", selector_prefix_mask(sr->local->client));
+	JD_selector_range("PLUTO_MY_CLIENT", sr->local->client);
+	JD_address("PLUTO_MY_CLIENT_NET", selector_prefix(sr->local->client));
+	JD_address("PLUTO_MY_CLIENT_MASK", selector_prefix_mask(sr->local->client));
 
 	if (cidr_is_specified(c->local->config->child.vti_ip)) {
 		JDemitter("VTI_IP", jam_cidr(&jb, &c->local->config->child.vti_ip));
 	}
 
 	if (cidr_is_specified(c->local->config->child.ipsec_interface_ip)) {
-		JDemitter("INTERFACE_IP", jam_cidr(&jb, &c->local->config->child.ipsec_interface_ip));
+		JD_cidr("INTERFACE_IP", c->local->config->child.ipsec_interface_ip);
 	}
 
 	JDunsigned("PLUTO_MY_PORT", sr->local->client.hport);
@@ -162,26 +179,25 @@ static bool fmt_common_shell_out(char *buf, size_t blen,
 				child->sa.st_ipcomp.protocol == &ip_protocol_ipcomp ? "IPCOMP" :
 				"unknown?"));
 
-	JDipaddr("PLUTO_PEER", sr->remote->host->addr);
+	JD_address("PLUTO_PEER", sr->remote->host->addr);
 	JDemitter("PLUTO_PEER_ID", jam_id_bytes(&jb, &c->remote->host.id, jam_shell_quoted_bytes));
 
 	/* for transport mode, things are complicated */
-	JDemitter("PLUTO_PEER_CLIENT",
-		  if (!tunneling && child != NULL &&
-		      child->sa.hidden_variables.st_nated_peer) {
-			  /* pexpect(selector_eq_address(sr->remote->client, sr->remote->host->addr)); */
-			  jam_address(&jb, &sr->remote->host->addr);
-			  jam(&jb, "/%d", address_info(sr->local->host->addr)->mask_cnt/*32 or 128*/);
-		  } else {
-			  jam_selector_range(&jb, &sr->remote->client);
-		  });
+	ip_selector peer_client;
+	if (!tunneling && child != NULL &&
+	    child->sa.hidden_variables.st_nated_peer) {
+		peer_client = selector_from_address(sr->remote->host->addr);
+	} else {
+		peer_client = sr->remote->client;
+	}
+	JD_selector_range("PLUTO_PEER_CLIENT", peer_client);
 
-	JDipaddr("PLUTO_PEER_CLIENT_NET",
+	JD_address("PLUTO_PEER_CLIENT_NET",
 		 (!tunneling && child != NULL &&
 		  child->sa.hidden_variables.st_nated_peer) ?
 		 sr->remote->host->addr : selector_prefix(sr->remote->client));
 
-	JDipaddr("PLUTO_PEER_CLIENT_MASK", selector_prefix_mask(sr->remote->client));
+	JD_address("PLUTO_PEER_CLIENT_MASK", selector_prefix_mask(sr->remote->client));
 	JDunsigned("PLUTO_PEER_PORT", sr->remote->client.hport);
 	JDunsigned("PLUTO_PEER_PROTOCOL", sr->remote->client.ipproto);
 
@@ -221,7 +237,7 @@ static bool fmt_common_shell_out(char *buf, size_t blen,
 
 	ip_address sourceip = spd_end_sourceip(sr->local);
 	if (sourceip.ip.is_set) {
-		JDipaddr("PLUTO_MY_SOURCEIP", sourceip);
+		JD_address("PLUTO_MY_SOURCEIP", sourceip);
 		if (child != NULL) {
 			JDstr("PLUTO_MOBIKE_EVENT",
 			      (updown_env.pluto_mobike_event ? "yes" : ""));
@@ -312,7 +328,9 @@ static bool fmt_common_shell_out(char *buf, size_t blen,
 #	undef JDuint
 #	undef JDuint64
 #	undef JDemitter
-#	undef JDipaddr
+#	undef JD_address
+#	undef JD_cidr
+#	undef JD_selector_range
 }
 
 static bool do_updown_verb(const char *verb,
