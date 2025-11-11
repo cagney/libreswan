@@ -139,6 +139,7 @@ static struct nlmsghdr *netlink_query_init(const struct ip_info *afi,
 /*
  * Add RTA_SRC or RTA_DST attribute to netlink query message.
  */
+
 static void netlink_query_add_address(struct nlmsghdr *nlmsg, int rta_type,
 				      const ip_address *addr, const char *what,
 				      struct verbose verbose)
@@ -152,8 +153,9 @@ static void netlink_query_add_address(struct nlmsghdr *nlmsg, int rta_type,
 	/* Find first empty attribute slot */
 	rtlen = RTM_PAYLOAD(nlmsg);
 	rtattr = (struct rtattr *)RTM_RTA(rtmsg);
-	while (RTA_OK(rtattr, rtlen))
+	while (RTA_OK(rtattr, rtlen)) {
 		rtattr = RTA_NEXT(rtattr, rtlen);
+	}
 
 	/* Add attribute */
 	shunk_t bytes = address_as_shunk(addr);
@@ -174,6 +176,34 @@ static void netlink_query_add_address(struct nlmsghdr *nlmsg, int rta_type,
 		 rta_type == RTA_PREFSRC ? "PREFSRC" :
 		 "???"),
 		str_address(addr, &ab), what);
+}
+
+static void netlink_query_add_uint32(struct nlmsghdr *nlmsg, int rta_type,
+				     uint32_t value, const char *what,
+				     struct verbose verbose)
+{
+	struct rtmsg *rtmsg;
+	struct rtattr *rtattr;
+	int rtlen;
+
+	rtmsg = (struct rtmsg *)NLMSG_DATA(nlmsg);
+
+	/* Find first empty attribute slot */
+	rtlen = RTM_PAYLOAD(nlmsg);
+	rtattr = (struct rtattr *)RTM_RTA(rtmsg);
+	while (RTA_OK(rtattr, rtlen)) {
+		rtattr = RTA_NEXT(rtattr, rtlen);
+	}
+
+	/* Add attribute */
+	rtattr->rta_type = rta_type;
+	rtattr->rta_len = sizeof(struct rtattr) + sizeof(value); /* bytes */
+	memmove(RTA_DATA(rtattr), &value, sizeof(value));
+	nlmsg->nlmsg_len += rtattr->rta_len;
+
+	verbose("add RTA_%s %"PRIu32" (%s)",
+		(rta_type == RTA_OIF ? "OIF" : "???"),
+		value, what);
 }
 
 /*
@@ -487,6 +517,7 @@ static enum resolve_status resolve_defaultroute_one(struct route_addrs *host,
 		jam_string(buf, (host_afi == NULL ? "<unset>" : host_afi->ip_name));
 		jam(buf, " %s=", host->leftright);
 		jam_pa(buf, &host->host);
+		jam(buf, " %sinterface=%d", host->leftright, host->nexthop.interface);
 		jam(buf, " %snexthop=", host->leftright);
 		jam_pa(buf, &host->nexthop);
 		jam(buf, " (peer) %s=", peer->leftright);
@@ -524,8 +555,7 @@ static enum resolve_status resolve_defaultroute_one(struct route_addrs *host,
 	}
 
 	/*
-	 * msgbuf is dynamically allocated since the buffer may need
-	 * to be grown.
+	 * A "huge" msgbuf is allocated.
 	 */
 	struct nlmsghdr *msgbuf =
 		netlink_query_init(host_afi, /*type*/RTM_GETROUTE,
@@ -578,6 +608,12 @@ static enum resolve_status resolve_defaultroute_one(struct route_addrs *host,
 					  "host->host.addr", verbose);
 	}
 
+	if (host->nexthop.interface > 0) {
+		pexpect(seeking == PREFSRC);
+		netlink_query_add_uint32(msgbuf, RTA_OIF, host->nexthop.interface,
+					 "host->nexthop.interface", verbose);
+	}
+
 	/* Send netlink get_route request */
 	struct linux_netlink_context context = {
 		.status = RESOLVE_FAILURE,
@@ -612,7 +648,8 @@ static enum resolve_status resolve_defaultroute_one(struct route_addrs *host,
 	return context.status;
 }
 
-enum route_status get_route(ip_address dest, struct ip_route *route,
+enum route_status get_route(ip_address dest,
+			    struct ip_route *route,
 			    struct logger *logger)
 {
 	struct verbose verbose = VERBOSE(DEBUG_STREAM, logger, NULL);
