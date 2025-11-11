@@ -402,6 +402,8 @@ enum {
 	 * The remainder are enabled individually.
 	 */
 
+	DBG_TAINT_IX,
+
 	DBG_UPDOWN_IX,
 
 	DBG_CRYPT_IX,
@@ -423,6 +425,7 @@ enum {
 #define DBG_CPU_USAGE	LELEM(DBG_CPU_USAGE_IX)
 #define DBG_REFCNT	LELEM(DBG_REFCNT_IX)
 #define DBG_TMI		LELEM(DBG_TMI_IX)
+#define DBG_TAINT	LELEM(DBG_TAINT_IX)
 #define DBG_CRYPT	LELEM(DBG_CRYPT_IX)
 #define DBG_PRIVATE	LELEM(DBG_PRIVATE_IX)
 #define DBG_UPDOWN	LELEM(DBG_UPDOWN_IX)
