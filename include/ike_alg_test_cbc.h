@@ -21,9 +21,8 @@ struct cbc_test_vector {
 	const char *ciphertext;
 };
 
-extern const struct cbc_test_vector *const aes_cbc_tests;
-extern const struct cbc_test_vector *const camellia_cbc_tests;
+extern const struct cbc_test_vector aes_cbc_test_vectors[];
+extern const struct cbc_test_vector camellia_cbc_test_vectors[];
 
-bool test_cbc_vectors(const struct encrypt_desc *encrypt_desc,
-		      const struct cbc_test_vector *tests,
+bool test_cbc_vectors(const struct ike_alg *alg,
 		      struct logger *logger);

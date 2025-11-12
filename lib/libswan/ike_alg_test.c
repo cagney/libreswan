@@ -36,13 +36,9 @@
 
 void test_ike_alg(struct logger *logger)
 {
-#ifdef USE_CAMELLIA
-	TEST(test_cbc_vectors, ike_alg_encrypt_camellia_cbc, camellia_cbc_tests);
-#endif
 #ifdef USE_AES
 	TEST(test_gcm_vectors, ike_alg_encrypt_aes_gcm_16, aes_gcm_tests);
 	TEST(test_ctr_vectors, ike_alg_encrypt_aes_ctr,    aes_ctr_tests);
-	TEST(test_cbc_vectors, ike_alg_encrypt_aes_cbc,    aes_cbc_tests);
 #endif
 #ifdef USE_PRF_AES_XCBC
 	TEST(test_prf_vectors, ike_alg_prf_aes_xcbc,       aes_xcbc_prf_tests);

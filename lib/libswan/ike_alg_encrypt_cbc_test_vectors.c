@@ -33,7 +33,7 @@
 /*
  * Ref: https://tools.ietf.org/html/rfc3602: Test Vectors
  */
-static const struct cbc_test_vector aes_cbc_test_vectors[] = {
+const struct cbc_test_vector aes_cbc_test_vectors[] = {
 	{
 		.description = "Encrypting 16 bytes (1 block) using AES-CBC with 128-bit key",
 		.key = "0x06a9214036b8a15b512e03d534120006",
@@ -81,14 +81,13 @@ static const struct cbc_test_vector aes_cbc_test_vectors[] = {
 		.description = NULL,
 	}
 };
-const struct cbc_test_vector *const aes_cbc_tests = aes_cbc_test_vectors;
 
 /*
  * https://tools.ietf.org/html/rfc4312
  * https://info.isl.ntt.co.jp/crypt/index.html
  * https://info.isl.ntt.co.jp/crypt/eng/camellia/dl/cryptrec/t_camellia.txt
  */
-static const struct cbc_test_vector camellia_cbc_test_vectors[] = {
+const struct cbc_test_vector camellia_cbc_test_vectors[] = {
 	{
 		.description = "Camellia: 16 bytes with 128-bit key",
 		.key = "0x" "00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00",
@@ -121,7 +120,6 @@ static const struct cbc_test_vector camellia_cbc_test_vectors[] = {
 		.description = NULL,
 	}
 };
-const struct cbc_test_vector *const camellia_cbc_tests = camellia_cbc_test_vectors;
 
 static bool test_cbc_op(const struct encrypt_desc *encrypt_desc,
 			const char *description,
@@ -202,10 +200,12 @@ static bool test_cbc_vector(const struct encrypt_desc *encrypt_desc,
 	return ok;
 }
 
-bool test_cbc_vectors(const struct encrypt_desc *desc,
-		      const struct cbc_test_vector *tests,
+bool test_cbc_vectors(const struct ike_alg *alg,
 		      struct logger *logger)
 {
+	const struct encrypt_desc *desc = encrypt_desc(alg);
+	const struct cbc_test_vector *tests = desc->test_vectors.cbc;
+
 	bool ok = true;
 	const struct cbc_test_vector *test;
 	for (test = tests; test->description != NULL; test++) {

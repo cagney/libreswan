@@ -32,6 +32,7 @@
 #include "ike_alg_integ.h"
 #include "ike_alg_prf.h"
 #include "lsw-pfkeyv2.h"	/* for SADB_*ALG_* */
+#include "ike_alg_test_cbc.h"
 
 const struct encrypt_desc ike_alg_encrypt_aes_cbc = {
 	.common = {
@@ -49,6 +50,7 @@ const struct encrypt_desc ike_alg_encrypt_aes_cbc = {
 #endif
 		},
 		.fips.approved = true,
+		.test = test_cbc_vectors,
 	},
 	.nss = {
 		.mechanism = CKM_AES_CBC,
@@ -63,6 +65,8 @@ const struct encrypt_desc ike_alg_encrypt_aes_cbc = {
 	.encrypt_tcpdump_name = "aes",
 	.encrypt_ike_audit_name = "aes",
 	.encrypt_kernel_audit_name = "AES",
+	.test_vectors.cbc = aes_cbc_test_vectors,
+
 };
 
 const struct encrypt_desc ike_alg_encrypt_aes_ctr =

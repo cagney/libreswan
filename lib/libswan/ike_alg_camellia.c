@@ -19,6 +19,7 @@
 #include "ike_alg_encrypt.h"
 #include "ike_alg_encrypt_ops.h"
 #include "lsw-pfkeyv2.h"	/* for SADB_*ALG_* */
+#include "ike_alg_test_cbc.h"
 
 /* Camellia is a drop-in replacement for AES */
 
@@ -55,6 +56,7 @@ const struct encrypt_desc ike_alg_encrypt_camellia_cbc =
 			[SADB_ALG_ID] = SADB_X_EALG_CAMELLIACBC,
 #endif
 		},
+		.test = test_cbc_vectors,
 	},
 	.nss = {
 		.mechanism = CKM_CAMELLIA_CBC,
@@ -69,6 +71,7 @@ const struct encrypt_desc ike_alg_encrypt_camellia_cbc =
 	.encrypt_tcpdump_name = "camellia",
 	.encrypt_ike_audit_name = "camellia",
 	.encrypt_kernel_audit_name = "CAMELLIA",
+	.test_vectors.cbc = camellia_cbc_test_vectors,
 };
 
 const struct encrypt_desc ike_alg_encrypt_camellia_ctr =

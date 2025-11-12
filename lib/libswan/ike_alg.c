@@ -1375,11 +1375,10 @@ static void log_ike_algs(struct logger *logger)
 }
 
 /*
- * Strip out any non-FIPS algorithms.
- *
- * This prevents checks being performed on algorithms that are.
+ * Strip out any non-working algorithms.  It might be due to FIPS, but
+ * it also might be due to external configuration hobbling NSS.
  */
-static void strip_nonfips(const struct ike_alg_type *type, struct logger *logger)
+static void strip_nonworking(const struct ike_alg_type *type, struct logger *logger)
 {
 	const struct ike_alg **end = type->algorithms->start;
 	FOR_EACH_IKE_ALGP(type, algp) {
@@ -1387,10 +1386,22 @@ static void strip_nonfips(const struct ike_alg_type *type, struct logger *logger
 		/*
 		 * Check FIPS before trying to run any tests.
 		 */
-		if (!alg->fips.approved) {
+		if (is_fips_mode() && !alg->fips.approved) {
 			llog(RC_LOG, logger,
 			     "%s %s disabled; not FIPS compliant",
 			     type->story, alg->fqn);
+			continue;
+		}
+		if (alg->test == NULL) {
+			llog_pexpect(logger, HERE,
+				     "%s %s has no test() function",
+				     type->story, alg->fqn);
+			continue;
+		}
+		if (!alg->test(alg, logger)) {
+			llog_pexpect(logger, HERE,
+				     "%s %s disabled; test function failed",
+				     type->story, alg->fqn);
 			continue;
 		}
 		*end++ = alg;
@@ -1400,17 +1411,14 @@ static void strip_nonfips(const struct ike_alg_type *type, struct logger *logger
 
 void init_ike_alg(struct logger *logger)
 {
-	bool fips = is_fips_mode();
 
 	/*
 	 * If needed, completely strip out non-FIPS algorithms.
 	 * Prevents inconsistency where a non-FIPS algorithm is
 	 * referring to something that's been disabled.
 	 */
-	if (fips) {
-		FOR_EACH_IKE_ALG_TYPEP(typep) {
-			strip_nonfips(*typep, logger);
-		}
+	FOR_EACH_IKE_ALG_TYPEP(typep) {
+		strip_nonworking(*typep, logger);
 	}
 
 	/*

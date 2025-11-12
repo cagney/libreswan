@@ -297,6 +297,11 @@ struct ike_alg {
 		const bool approved;
 		uintmax_t operation_limit;
 	} fips;
+
+	/*
+	 * verify that the algorithm works.
+	 */
+	bool (*test)(const struct ike_alg *alg, struct logger *logger);
 };
 
 /*
@@ -450,6 +455,11 @@ struct encrypt_desc {
 	const char *encrypt_kernel_audit_name;
 
 	const struct encrypt_ops *encrypt_ops;
+
+	struct {
+		const struct cbc_test_vector *cbc;
+	} test_vectors;
+
 };
 
 /*
