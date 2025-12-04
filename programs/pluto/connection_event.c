@@ -151,7 +151,7 @@ static void dispatch_connection_event(struct connection_event *e,
 		revive_connection(e->connection, e->subplot, inception);
 		break;
 	case CONNECTION_CHECK_DDNS:
-		bad_case(e->kind); /* not yet implemented */
+		connection_check_ddns(e->connection, VERBOSE(DEBUG_STREAM, e->logger, "DDNS"));
 		break;
 	}
 

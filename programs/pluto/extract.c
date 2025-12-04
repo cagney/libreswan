@@ -66,6 +66,7 @@
 #include "binaryscale-iec-60027-2.h"
 #include "server.h"		/* for nr_processors_online() */
 #include "ipsecconf/keywords.h"
+#include "connection_event.h"
 
 static bool is_never_negotiate_wm(const struct whack_message *wm)
 {
@@ -4679,6 +4680,9 @@ diag_t extract_connection(const struct whack_message *wm,
 	}
 
 	build_connection_host_and_proposals_from_resolve(c, resolved_host_addrs, verbose);
+	if (!resolved_host_addrs->ok) {
+		schedule_connection_check_ddns(c, verbose);
+	}
 
 	/*
 	 * Force orientation (currently kind of unoriented?).
@@ -4687,6 +4691,8 @@ diag_t extract_connection(const struct whack_message *wm,
 	 * tables are updated.
 	 *
 	 * This function holds the just allocated reference.
+	 *
+	 * If things didn't resolve, is there any point?
 	 */
 	vassert(!oriented(c));
 	orient(c, verbose.logger);
