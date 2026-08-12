@@ -119,10 +119,16 @@ echo_extAIA_ocsp()
 
 serial()
 {
-    local certdir=$1 ; shift
-    local serial
-    read serial < ${certdir}/serial
-    echo $((serial + 1)) > ${certdir}/serial
+    # serial is shared between sub-pki keys
+    local serialfile=$(dirname $1)/serial ; shift
+    local serialfile
+    serial=$(
+	if test -r ${serialfile} ; then
+	    cat ${serialfile}
+	else
+	    echo 1
+	fi)
+    echo $((serial + 1)) > ${serialfile}
     echo ${serial}
 }
 
@@ -401,7 +407,6 @@ while read dirs cas domain is_ca ku eku param ; do
 
 	    # configure root certificate
 
-	    echo 1           > ${certdir}/serial	# next
 	    echo "${param}"  > ${certdir}/param
 	    echo "${domain}" > ${certdir}/domain
 
