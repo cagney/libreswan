@@ -27,9 +27,9 @@ west #
 west #
  # send to delete child SAs
 west #
- ipsec whack --impair v1_isakmp_delete_payload:duplicate
+ ipsec whack --impair v1_isakmp_delete_payload:emit_duplicate
 west #
- ipsec whack --impair v1_ipsec_delete_payload:duplicate
+ ipsec whack --impair v1_ipsec_delete_payload:emit_duplicate
 west #
  ipsec auto --delete west-east
 "west-east": terminating SAs using this connection
