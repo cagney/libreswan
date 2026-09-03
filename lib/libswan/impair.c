@@ -62,8 +62,10 @@ static const struct sparse_names impair_emit_names = {
 static const char *impair_payload_name[] = {
 #define S(E) [E] = #E
 	S(IMPAIR_PAYLOAD_EMIT_NEVER),
+	S(IMPAIR_PAYLOAD_EMIT_ALWAYS),
 	S(IMPAIR_PAYLOAD_EMIT_EMPTY),
 	S(IMPAIR_PAYLOAD_EMIT_DUPLICATE),
+	S(IMPAIR_PAYLOAD_EMIT_ZEROS),
 	S(IMPAIR_PAYLOAD_IGNORE),
 #undef S
 };

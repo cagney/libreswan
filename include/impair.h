@@ -54,6 +54,7 @@ enum impair_payload_flag {
 	IMPAIR_PAYLOAD_EMIT_ALWAYS,
 	IMPAIR_PAYLOAD_EMIT_EMPTY,
 	IMPAIR_PAYLOAD_EMIT_DUPLICATE,
+	IMPAIR_PAYLOAD_EMIT_ZEROS,
 	IMPAIR_PAYLOAD_IGNORE,
 #define IMPAIR_PAYLOAD_ROOF (IMPAIR_PAYLOAD_IGNORE+1)
 };
@@ -65,6 +66,7 @@ struct impair_payload {
 #define impair_payload_emit_always flags[IMPAIR_PAYLOAD_EMIT_ALWAYS]
 #define impair_payload_emit_empty flags[IMPAIR_PAYLOAD_EMIT_EMPTY]
 #define impair_payload_emit_duplicate flags[IMPAIR_PAYLOAD_EMIT_DUPLICATE]
+#define impair_payload_emit_zeros flags[IMPAIR_PAYLOAD_EMIT_ZEROS]
 #define impair_payload_ignore flags[IMPAIR_PAYLOAD_IGNORE]
 	bool flags[IMPAIR_PAYLOAD_ROOF];
 };
