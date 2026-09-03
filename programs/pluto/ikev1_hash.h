@@ -55,7 +55,7 @@ struct v1_hash_fixup {
 	chunk_t hash_data;
 	const uint8_t *body;
 	const char *what;
-	enum impair_emit impair;
+	bool impaired;
 	enum v1_hash_type hash_type;
 	struct logger *logger;
 };

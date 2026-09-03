@@ -123,13 +123,15 @@ struct impair {
 	 * transform to screw with.
 	 */
 
-	enum impair_emit ke_payload;
 	enum impair_emit ike_key_length_attribute;
 	enum impair_emit child_key_length_attribute;
 
+	struct impair_payload ke_payload;
+
 	struct impair_unsigned log_rate_limit;
 
-	enum impair_emit v1_hash_payload;
+	struct impair_payload v1_hash_payload;
+
 	enum impair_v1_exchange v1_hash_exchange;
 	bool v1_hash_check;
 

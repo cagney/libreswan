@@ -267,9 +267,7 @@ struct impairment impairments[] = {
 #undef ADD_TRANSFORM
 
 	B(jacob_two_two, "cause pluto to send all messages twice."),
-	V(ke_payload, "corrupt the outgoing KE payload",
-	  .value_sparse_names = &impair_emit_names,
-	  .unsigned_help = "emit the KE payload filled with <unsigned> bytes"),
+	P(ke_payload, "corrupt the outgoing KE payload"),
 	U(log_rate_limit, "set the per-hour(?) cap on rate-limited log messages"),
 	B(major_version_bump, "cause pluto to send an IKE major version that's higher then we support."),
 	B(minor_version_bump, "cause pluto to send an IKE minor version that's higher then we support."),
@@ -302,9 +300,7 @@ struct impairment impairments[] = {
 	B(v1_hash_check, "disable check of incoming IKEv1 hash payload"),
 	V(v1_hash_exchange, "corrupt the HASH payload in the outgoing exchange",
 	  .value_sparse_names = &impair_v1_exchange_names),
-	V(v1_hash_payload, "corrupt the emitted HASH payload",
-	  .value_sparse_names = &impair_emit_names,
-	  .unsigned_help = "emit the hash payload filled with <unsigned> bytes"),
+	P(v1_hash_payload, "corrupt the emitted HASH payload"),
 
 	B(tcp_use_blocking_write, "use a blocking write when sending TCP encapsulated IKE messages"),
 	B(tcp_skip_setsockopt_espintcp, "skip the required setsockopt(\"espintcp\") call"),
