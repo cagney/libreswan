@@ -127,37 +127,27 @@ void send_v1_delete(struct ike_sa *ike, struct state *st, where_t where)
 			.isad_nospi = 1,
 		};
 
-
-		switch (impair.v1_isakmp_delete_payload) {
-		case IMPAIR_EMIT_NO:
-		case IMPAIR_EMIT_FORCE:
-		{
+		if (impair.v1_isakmp_delete_payload.enabled) {
+			if (impair.v1_isakmp_delete_payload.impair_payload_emit_empty) {
+				llog(IMPAIR_STREAM, st->logger, "emitting empty (i.e., no SPI) ISKMP delete payload");
+				passert(pbs_out_struct(&r_hdr_pbs, isad, &isakmp_delete_desc, NULL));
+			}
+			if (impair.v1_isakmp_delete_payload.impair_payload_emit_duplicate) {
+				llog(IMPAIR_STREAM, st->logger, "emitting duplicate ISKMP delete payloads");
+				for (unsigned nr = 0; nr < 2; nr++) {
+					struct pbs_out del_pbs;
+					passert(pbs_out_struct(&r_hdr_pbs, isad, &isakmp_delete_desc, &del_pbs));
+					passert(pbs_out_thing(&del_pbs, st->st_ike_spis.initiator, "initiator SPI"));
+					passert(pbs_out_thing(&del_pbs, st->st_ike_spis.responder, "responder SPI"));
+					close_pbs_out(&del_pbs);
+				}
+			}
+		} else {
 			struct pbs_out del_pbs;
 			passert(pbs_out_struct(&r_hdr_pbs, isad, &isakmp_delete_desc, &del_pbs));
 			passert(pbs_out_thing(&del_pbs, st->st_ike_spis.initiator, "initiator SPI"));
 			passert(pbs_out_thing(&del_pbs, st->st_ike_spis.responder, "responder SPI"));
 			close_pbs_out(&del_pbs);
-			break;
-		}
-		case IMPAIR_EMIT_OMIT:
-			llog(IMPAIR_STREAM, st->logger, "omitting ISKMP delete payload");
-			break;
-		case IMPAIR_EMIT_EMPTY:
-			llog(IMPAIR_STREAM, st->logger, "emitting empty (i.e., no SPI) ISKMP delete payload");
-			passert(pbs_out_struct(&r_hdr_pbs, isad, &isakmp_delete_desc, NULL));
-			break;
-		case IMPAIR_EMIT_DUPLICATE:
-		{
-			llog(IMPAIR_STREAM, st->logger, "emitting duplicate ISKMP delete payloads");
-			for (unsigned nr = 0; nr < 2; nr++) {
-				struct pbs_out del_pbs;
-				passert(pbs_out_struct(&r_hdr_pbs, isad, &isakmp_delete_desc, &del_pbs));
-				passert(pbs_out_thing(&del_pbs, st->st_ike_spis.initiator, "initiator SPI"));
-				passert(pbs_out_thing(&del_pbs, st->st_ike_spis.responder, "responder SPI"));
-				close_pbs_out(&del_pbs);
-			}
-			break;
-		}
 		}
 
 	} else {
@@ -171,34 +161,25 @@ void send_v1_delete(struct ike_sa *ike, struct state *st, where_t where)
 				.isad_nospi = 1,
 			};
 
-			switch (impair.v1_ipsec_delete_payload) {
-			case IMPAIR_EMIT_NO:
-			case IMPAIR_EMIT_FORCE:
-			{
+			if (impair.v1_ipsec_delete_payload.enabled) {
+				if (impair.v1_ipsec_delete_payload.impair_payload_emit_empty) {
+					llog(IMPAIR_STREAM, st->logger, "emitting empty (i.e., no SPI) IPsec delete payload");
+					passert(pbs_out_struct(&r_hdr_pbs, isad, &isakmp_delete_desc, NULL));
+				}
+				if (impair.v1_ipsec_delete_payload.impair_payload_emit_duplicate) {
+					llog(IMPAIR_STREAM, st->logger, "emitting duplicate IPsec delete payloads");
+					for (unsigned nr = 0; nr < 2; nr++) {
+						struct pbs_out del_pbs;
+						passert(pbs_out_struct(&r_hdr_pbs, isad, &isakmp_delete_desc, &del_pbs));
+						passert(pbs_out_thing(&del_pbs, ns->spi, "delete payload"));
+						close_pbs_out(&del_pbs);
+					}
+				}
+			} else {
 				struct pbs_out del_pbs;
 				passert(pbs_out_struct(&r_hdr_pbs, isad, &isakmp_delete_desc, &del_pbs));
 				passert(pbs_out_thing(&del_pbs, ns->spi, "delete payload"));
 				close_pbs_out(&del_pbs);
-				break;
-			}
-			case IMPAIR_EMIT_OMIT:
-				llog(IMPAIR_STREAM, st->logger, "omitting IPsec delete payload");
-				break;
-			case IMPAIR_EMIT_EMPTY:
-				passert(pbs_out_struct(&r_hdr_pbs, isad, &isakmp_delete_desc, NULL));
-				llog(IMPAIR_STREAM, st->logger, "emitting empty (i.e., no SPI) IPsec delete payload");
-				break;
-			case IMPAIR_EMIT_DUPLICATE:
-			{
-				llog(IMPAIR_STREAM, st->logger, "emitting duplicate IPsec delete payloads");
-				for (unsigned nr = 0; nr < 2; nr++) {
-					struct pbs_out del_pbs;
-					passert(pbs_out_struct(&r_hdr_pbs, isad, &isakmp_delete_desc, &del_pbs));
-					passert(pbs_out_thing(&del_pbs, ns->spi, "delete payload"));
-					close_pbs_out(&del_pbs);
-				}
-				break;
-			}
 			}
 
 			if (impair.ikev1_del_with_notify) {

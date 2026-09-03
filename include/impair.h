@@ -212,8 +212,8 @@ struct impair {
 	struct impair_unsigned v1_remote_quick_id;
 	struct impair_unsigned v1_emit_quick_id;
 
-	enum impair_emit v1_isakmp_delete_payload;
-	enum impair_emit v1_ipsec_delete_payload;
+	struct impair_payload v1_isakmp_delete_payload;
+	struct impair_payload v1_ipsec_delete_payload;
 
 	struct impair_unsigned v2_delete_protoid;
 	struct impair_unsigned v2n_rekey_sa_protoid;
