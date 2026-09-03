@@ -71,25 +71,32 @@ v1_notification_t accept_v1_nonce(struct logger *logger,
  */
 bool ikev1_justship_KE(struct logger *logger, chunk_t *g, struct pbs_out *outs)
 {
-	switch (impair.ke_payload) {
-	case IMPAIR_EMIT_NO:
+	if (impair.ke_payload.enabled) {
+		if (impair.ke_payload.impair_payload_emit_never) {
+			llog(IMPAIR_STREAM, logger, "sending no KE (g^x) payload");
+			return true;
+		}
+		if (impair.ke_payload.impair_payload_emit_empty) {
+			llog(IMPAIR_STREAM, logger, "sending empty KE (g^x)");
+			return ikev1_out_generic_hunk(&isakmp_keyex_desc, outs, &null_shunk, "empty KE");
+		}
+		if (impair.ke_payload.impair_payload_emit_zeros) {
+			struct pbs_out z;
+			uint8_t byte = 0;
+			llog(IMPAIR_STREAM, logger, "sending bogus KE (g^x) == %u value to break DH calculations", byte);
+			/* Only used to test sending/receiving bogus g^x */
+			if (!ikev1_out_generic(&isakmp_keyex_desc, outs, &z)) {
+				return false;
+			}
+			if (!pbs_out_repeated_byte(&z, byte, g->len, "fake g^x")) {
+				return false;
+			}
+			return close_pbs_out(&z);
+		}
+		llog(IMPAIR_STREAM, logger, "unknown impair");
+		return false;
+	} else {
 		return ikev1_out_generic_hunk(&isakmp_keyex_desc, outs, g, "keyex value");
-	case IMPAIR_EMIT_OMIT:
-		llog(IMPAIR_STREAM, logger, "sending no KE (g^x) payload");
-		return true;
-	case IMPAIR_EMIT_EMPTY:
-		llog(IMPAIR_STREAM, logger, "sending empty KE (g^x)");
-		return ikev1_out_generic_hunk(&isakmp_keyex_desc, outs, &null_shunk, "empty KE");
-	default:
-	{
-		struct pbs_out z;
-		uint8_t byte = impair.ke_payload - IMPAIR_EMIT_ROOF;
-		llog(IMPAIR_STREAM, logger, "sending bogus KE (g^x) == %u value to break DH calculations", byte);
-		/* Only used to test sending/receiving bogus g^x */
-		return ikev1_out_generic(&isakmp_keyex_desc, outs, &z) &&
-			pbs_out_repeated_byte(&z, byte, g->len, "fake g^x") &&
-			(close_pbs_out(&z), true);
-	}
 	}
 }
 

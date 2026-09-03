@@ -34,9 +34,9 @@ bool emit_v1_HASH(enum v1_hash_type hash_type, const char *what,
 	fixup->what = what;
 	fixup->hash_type = hash_type;
 	fixup->logger = rbody->logger; /* not ST; might be parent SA */
-	fixup->impair = (impair.v1_hash_exchange == exchange
-			 ? impair.v1_hash_payload : IMPAIR_EMIT_NO);
-	if (fixup->impair == IMPAIR_EMIT_OMIT) {
+	fixup->impaired = (impair.v1_hash_exchange == exchange &&
+			   impair.v1_hash_payload.enabled);
+	if (fixup->impaired && impair.v1_hash_payload.impair_payload_emit_never) {
 		llog(IMPAIR_STREAM, fixup->logger, "omitting HASH payload for %s", what);
 		return true;
 	}
@@ -44,7 +44,7 @@ bool emit_v1_HASH(enum v1_hash_type hash_type, const char *what,
 	if (!ikev1_out_generic(&isakmp_hash_desc, rbody, &hash_pbs)) {
 		return false;
 	}
-	if (fixup->impair == IMPAIR_EMIT_EMPTY) {
+	if (fixup->impaired && impair.v1_hash_payload.impair_payload_emit_empty) {
 		llog(IMPAIR_STREAM, fixup->logger, "sending HASH payload with no data for %s", what);
 	} else {
 		/* reserve space for HASH data */
@@ -65,15 +65,15 @@ void fixup_v1_HASH(struct state *st, const struct v1_hash_fixup *fixup,
 {
 	const struct logger *logger = &global_logger;
 
-	if (fixup->impair >= IMPAIR_EMIT_ROOF) {
-		unsigned byte = fixup->impair - IMPAIR_EMIT_ROOF;
+	if (fixup->impaired && impair.v1_hash_payload.impair_payload_emit_zeros) {
+		unsigned byte = 0;
 		llog(IMPAIR_STREAM, fixup->logger, "setting HASH payload bytes to %02x", byte);
 		/* chunk_fill()? */
 		memset(fixup->hash_data.ptr, byte, fixup->hash_data.len);
 		return;
 	}
 
-	if (fixup->impair != IMPAIR_EMIT_NO) {
+	if (fixup->impaired) {
 		/* already logged above? */
 		return;
 	}

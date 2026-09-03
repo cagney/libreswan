@@ -33,7 +33,7 @@
 
 bool emit_v2KE(shunk_t ke_blob, const struct ke_desc *ke_alg, struct pbs_out *outs)
 {
-	if (impair.ke_payload == IMPAIR_EMIT_OMIT) {
+	if (impair.ke_payload.impair_payload_emit_never) {
 		llog(IMPAIR_STREAM, outs->logger, "omitting KE payload");
 		return true;
 	}
@@ -47,21 +47,24 @@ bool emit_v2KE(shunk_t ke_blob, const struct ke_desc *ke_alg, struct pbs_out *ou
 	if (!pbs_out_struct(outs, v2ke, &ikev2_ke_payload_desc, &ke_pbs))
 		return false;
 
-	if (impair.ke_payload >= IMPAIR_EMIT_ROOF) {
-		uint8_t byte = impair.ke_payload - IMPAIR_EMIT_ROOF;
-		llog(IMPAIR_STREAM, outs->logger,
-		     "sending bogus KE (g^x) == %u value to break DH calculations", byte);
-		/* Only used to test sending/receiving bogus g^x */
-		if (!pbs_out_repeated_byte(&ke_pbs, byte, ke_blob.len,
-					   "ikev2 impair KE (g^x) == 0")) {
-			/* already logged */
-			return false; /*fatal*/
+	if (impair.ke_payload.enabled) {
+		if (impair.ke_payload.impair_payload_emit_zeros) {
+			uint8_t byte = 0;
+			llog(IMPAIR_STREAM, outs->logger,
+			     "sending bogus KE (g^x) == %u value to break DH calculations", byte);
+			/* Only used to test sending/receiving bogus g^x */
+			if (!pbs_out_repeated_byte(&ke_pbs, byte, ke_blob.len,
+						   "ikev2 impair KE (g^x) == 0")) {
+				/* already logged */
+				return false; /*fatal*/
+			}
 		}
-	} else if (impair.ke_payload == IMPAIR_EMIT_EMPTY) {
-		llog(IMPAIR_STREAM, outs->logger, "sending an empty KE value");
-		if (!pbs_out_zero(&ke_pbs, 0, "ikev2 impair KE (g^x) == empty")) {
-			/* already logged */
-			return false; /*fatal*/
+		if (impair.ke_payload.impair_payload_emit_empty) {
+			llog(IMPAIR_STREAM, outs->logger, "sending an empty KE value");
+			if (!pbs_out_zero(&ke_pbs, 0, "ikev2 impair KE (g^x) == empty")) {
+				/* already logged */
+				return false; /*fatal*/
+			}
 		}
 	} else {
 		if (!pbs_out_hunk(&ke_pbs, ke_blob, "ikev2 g^x"))
