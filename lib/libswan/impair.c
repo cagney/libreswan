@@ -178,7 +178,6 @@ struct impairment impairments[] = {
 		.annex = &impair.VALUE.annex,			\
 		.flags.len = elemsof(impair.VALUE.flags),	\
 		.flags.flag = impair.VALUE.flags,		\
-		.value_names = &impair_payload_names,		\
 		##__VA_ARGS__,					\
 	}
 #define B(VALUE, HELP)					\
@@ -400,11 +399,10 @@ struct impairment impairments[] = {
 	U(v1_remote_quick_id, "set the remote quick ID to <unsigned>"),
 	U(v1_emit_quick_id, "number of IDc[ir]s to emit (there should be 2)"),
 
-	V(v1_isakmp_delete_payload, "corrupt outgoing ISAKMP delete payload",
-	  .value_sparse_names = &impair_emit_names),
-
-	V(v1_ipsec_delete_payload, "corrupt outgoing IPsec delete payload",
-	  .value_sparse_names = &impair_emit_names),
+	F(v1_isakmp_delete_payload, "corrupt outgoing ISAKMP delete payload",
+	  .value_names = &impair_payload_names),
+	F(v1_ipsec_delete_payload, "corrupt outgoing IPsec delete payload",
+	  .value_names = &impair_payload_names),
 
 	U(v2_delete_protoid, "corrupt the IKEv2 Delete protocol ID"),
 	U(v2n_rekey_sa_protoid, "corrupt the IKEv2 REKEY CHILD notify protocol ID"),
