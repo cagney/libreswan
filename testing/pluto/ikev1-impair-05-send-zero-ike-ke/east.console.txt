@@ -6,7 +6,7 @@ Redirecting to: [initsystem]
 east #
  ../../guestbin/wait-until-pluto-started
 east #
- ipsec whack --impair ke_payload:0
+ ipsec whack --impair ke_payload:emit_zeros
 east #
  ipsec whack --impair suppress_retransmits
 east #

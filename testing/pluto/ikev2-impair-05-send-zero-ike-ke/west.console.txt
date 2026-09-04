@@ -20,7 +20,7 @@ west #
 west #
  ipsec whack --impair revival
 west #
- ipsec whack --impair ke_payload:0
+ ipsec whack --impair ke_payload:emit_zeros
 west #
  ipsec whack --impair suppress_retransmits
 west #

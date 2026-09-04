@@ -2,7 +2,7 @@
 # expect KE:0 in response
 ipsec whack --impair none
 ipsec whack --impair revival
-ipsec whack --impair ke_payload:0
+ipsec whack --impair ke_payload:emit_zeros
 ipsec whack --impair suppress_retransmits
 # DH should fail
 ipsec auto --up westnet-eastnet-ipv4-psk-ikev2
