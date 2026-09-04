@@ -16,7 +16,7 @@ initdone
 west #
  # should fail fast
 west #
- ipsec whack --impair ke_payload:0
+ ipsec whack --impair ke_payload:emit_zeros
 west #
  ipsec whack --impair timeout_on_retransmit
 west #

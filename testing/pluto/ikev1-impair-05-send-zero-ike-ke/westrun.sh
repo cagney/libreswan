@@ -1,5 +1,5 @@
 # should fail fast
-ipsec whack --impair ke_payload:0
+ipsec whack --impair ke_payload:emit_zeros
 ipsec whack --impair timeout_on_retransmit
 ipsec up westnet-eastnet-ipv4-psk
 ipsec whack --impair none
