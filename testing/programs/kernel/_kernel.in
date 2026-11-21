@@ -2,7 +2,7 @@
 # -*- mode: sh; sh-shell: sh -*-
 # ipsec kernel commands
 #
-# Copyright (C) 2023,2025 Andrew Cagney
+# Copyright (C) 2023,2025-2026 Andrew Cagney
 #
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the
@@ -16,19 +16,40 @@
 #
 
 if test $# -lt 1 ; then
-    echo "usage: $0 { state | policy }" 1>&2
+    cat <<EOF 1>&2
+Usage: $0 { state | policy } [--sort] [--nosort] [pattern]"
+
+EOF
     exit 1
 fi
 
-case $1 in
-    state | policy )
-	op=$1 ; shift
-	;;
-    * )
-	echo "$1: unknown operation" 1>&2
-	exit 1
-	;;
-esac
+while test "$#" -gt 0 ; do
+    case $1 in
+	state )
+	    op=$1
+	    sort=${sort:-false}
+	    ;;
+	policy )
+	    op=$1
+	    sort=${sort:-true}
+	    ;;
+	--sort )
+	    sort=true
+	    ;;
+	--sort=no | --nosort )
+	    sort=false
+	    ;;
+	* )
+	    # assume rest os grep pattern
+	    break
+	    ;;
+    esac
+    shift
+done
+
+if test -z "${op}" ; then
+    echo "$0: missing operation" 1>&2
+fi
 
 # Join/Split related lines using <> as the separator so that they can
 # be fed to things like sort.  While at it strip out any trailing
@@ -51,15 +72,35 @@ $ { x; s,\n,<>,g; p; }'
 
 split_lines()
 {
-    sed -e 's,<>,\
+    {
+	if test "$#" -gt 0 ; then
+	    grep "$@"
+	else
+	    cat
+	fi
+    } | {
+	sed -e 's,<>,\
 ,g'
+    }
 }
 
 # deal with the different systems
 
 xfrm_state()
 {
-    ip xfrm state
+    {
+	ip xfrm state
+    } | {
+	join_lines
+    } | {
+	if ${sort} ; then
+	    sort -V
+	else
+	    cat
+	fi
+    } | {
+	split_lines
+    }
 }
 
 xfrm_policy()
@@ -105,12 +146,6 @@ xfrm_policy()
     } | {
 	# strip the sort prefixes
 	sed -e 's/^.* | //'
-    } | {
-	if test "$#" -gt 0 ; then
-	    grep "$@"
-	else
-	    cat
-	fi
     } | {
 	split_lines
     }
